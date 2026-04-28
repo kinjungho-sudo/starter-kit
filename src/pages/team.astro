@@ -1,0 +1,49 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const allMembers = await getCollection('members');
+const sorted = allMembers.sort((a, b) => {
+  // 운영자 먼저
+  if (a.data.role.includes('운영자')) return -1;
+  if (b.data.role.includes('운영자')) return 1;
+  return a.data.nickname.localeCompare(b.data.nickname);
+});
+---
+
+<Layout title="팀">
+  <section class="py-16 px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="mb-12">
+        <div class="text-xs font-black uppercase tracking-widest text-indigo-400 mb-3">TEAM</div>
+        <h1 class="text-3xl font-black text-white mb-3">빌더팀 AAA 멤버</h1>
+        <p class="text-white/50">AI 도구로 실제 결과물을 만드는 빌더들입니다.</p>
+      </div>
+
+      {sorted.length === 0 ? (
+        <p class="text-white/30 text-sm">멤버 프로필이 아직 없습니다.</p>
+      ) : (
+        <div class="grid md:grid-cols-2 gap-5">
+          {sorted.map(member => (
+            <div class="bg-white/[0.04] border border-white/10 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <div class="font-black text-white text-lg">{member.data.nickname}</div>
+                  <div class="text-xs text-indigo-400 font-medium">{member.data.role}</div>
+                </div>
+                <a href={`https://github.com/${member.data.github}`} target="_blank" rel="noopener noreferrer"
+                  class="text-xs text-white/30 hover:text-white/60 transition-colors">
+                  @{member.data.github}
+                </a>
+              </div>
+              <div class="text-xs text-white/20 mt-4">
+                합류: {member.data.joined}
+                {member.data.last_updated && ` · 최근 업데이트: ${member.data.last_updated}`}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+</Layout>

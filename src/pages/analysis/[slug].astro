@@ -1,0 +1,37 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const reports = await getCollection('analysis');
+  return reports.map(entry => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<Layout title={`Week ${entry.data.week} 분석`}>
+  <section class="py-16 px-6">
+    <div class="max-w-3xl mx-auto">
+      <a href="/analysis" class="text-xs text-white/40 hover:text-white/70 transition-colors mb-6 inline-block">← 분석 목록</a>
+
+      <div class="flex items-center gap-3 mb-6">
+        <span class="text-xs font-black uppercase tracking-widest text-indigo-400 border border-indigo-400/30 rounded-full px-3 py-1">
+          WEEK {entry.data.week}
+        </span>
+        <span class="text-xs text-white/30">
+          {entry.data.date}
+          {entry.data.total_submissions && ` · ${entry.data.total_submissions}건 제출`}
+        </span>
+      </div>
+
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+  </section>
+</Layout>
