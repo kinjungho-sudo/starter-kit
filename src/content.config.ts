@@ -28,7 +28,39 @@ const insights = defineCollection({
     expires: z.coerce.string().optional(),
     published: z.coerce.string().optional(),
     description: z.string().optional(),
-    type: z.enum(['url', 'thought']).optional(),
+    type: z.enum(['url', 'thought', 'quote', 'video']).optional(),
+    book: z.string().optional(),
+    platform: z.string().optional(),
+    youtube_id: z.string().optional(),
+    has_transcript: z.boolean().optional(),
+  }),
+});
+
+const quotes = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/quotes' }),
+  schema: z.object({
+    title: z.string().optional(),
+    author: z.string().optional(),
+    book: z.string().optional(),
+    platform: z.string().optional(),
+    tags: z.array(z.string()).optional().default([]),
+    created: z.coerce.string().optional(),
+    source: z.string().optional(),
+  }),
+});
+
+const videos = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/videos' }),
+  schema: z.object({
+    title: z.string().optional(),
+    channel: z.string().optional(),
+    youtube_id: z.string().optional(),
+    url: z.string().optional(),
+    has_transcript: z.boolean().optional().default(false),
+    tags: z.array(z.string()).optional().default([]),
+    category: z.string().optional(),
+    created: z.coerce.string().optional(),
+    summary: z.string().optional(),
   }),
 });
 
@@ -69,4 +101,4 @@ const gallery = defineCollection({
   }),
 });
 
-export const collections = { missions, insights, analysis, members, gallery };
+export const collections = { missions, insights, quotes, videos, analysis, members, gallery };

@@ -10,12 +10,14 @@ const { title } = Astro.props;
 const p = Astro.url.pathname;
 
 const nav = [
-  { href: '/',         label: '대시보드', icon: '▣' },
-  { href: '/archive',  label: '아카이브', icon: '◫' },
-  { href: '/insights', label: '인사이트', icon: '◈' },
-  { href: '/gallery',  label: '갤러리',   icon: '◧' },
-  { href: '/analysis', label: '독서',     icon: '◉' },
-  { href: '/team',     label: '팀',       icon: '◎' },
+  { href: '/',         label: '대시보드' },
+  { href: '/archive',  label: '아카이브' },
+  { href: '/insights', label: '인사이트' },
+  { href: '/quotes',   label: '좋은글'   },
+  { href: '/videos',   label: '유튜브'   },
+  { href: '/gallery',  label: '갤러리'   },
+  { href: '/analysis', label: '독서'     },
+  { href: '/team',     label: '팀'       },
 ];
 
 function active(href: string) {

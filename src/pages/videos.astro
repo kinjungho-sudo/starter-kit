@@ -1,0 +1,94 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+let all: any[] = [];
+try { all = await getCollection('videos'); } catch { all = []; }
+
+const sorted = [...all].sort((a, b) =>
+  (b.data.created ?? '').localeCompare(a.data.created ?? '')
+);
+
+const categories = [...new Set(sorted.map((v: any) => v.data.category).filter(Boolean))].sort();
+const filterCat = Astro.url.searchParams.get('cat') ?? '';
+const filtered = filterCat ? sorted.filter((v: any) => v.data.category === filterCat) : sorted;
+---
+
+<Layout title="유튜브" activeTab="videos">
+
+  <div slot="sidebar">
+    <p class="sb-label">전체</p>
+    <a href="/videos" class={`sb-item${!filterCat ? ' active' : ''}`}>
+      모든 영상
+      <span class="count">{sorted.length}</span>
+    </a>
+
+    {categories.length > 0 && (
+      <>
+        <hr class="sb-divider" />
+        <p class="sb-label">카테고리</p>
+        {categories.map((cat: string) => (
+          <a href={`/videos?cat=${encodeURIComponent(cat)}`} class={`sb-item${filterCat === cat ? ' active' : ''}`}>
+            {cat}
+            <span class="count">{sorted.filter((v: any) => v.data.category === cat).length}</span>
+          </a>
+        ))}
+      </>
+    )}
+  </div>
+
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+    <div>
+      <h1 class="page-title">유튜브</h1>
+      <p class="page-meta">영상 {filtered.length}건</p>
+    </div>
+  </div>
+
+  {filtered.length === 0 ? (
+    <div style="padding:64px 0; text-align:center; color:var(--muted2); font-size:13px;">아직 등록된 영상이 없습니다.</div>
+  ) : (
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:10px;">
+      {filtered.map((v: any) => {
+        const ytId = v.data.youtube_id ?? (v.data.url ? v.data.url.match(/(?:v=|youtu\.be\/)([^&\s]+)/)?.[1] : null);
+        return (
+          <a href={`/videos/${v.id}`} style="display:block; border:1px solid var(--border); border-radius:12px; overflow:hidden; text-decoration:none; transition:border-color 0.15s, background 0.15s;"
+            onmouseover="this.style.borderColor='rgba(255,255,255,0.15)'"
+            onmouseout="this.style.borderColor='var(--border)'">
+            {/* 썸네일 */}
+            {ytId ? (
+              <img
+                src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`}
+                alt={v.data.title ?? ''}
+                style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block; background:#111;"
+              />
+            ) : (
+              <div style="width:100%; aspect-ratio:16/9; background:#111; display:flex; align-items:center; justify-content:center;">
+                <span style="font-size:28px; opacity:0.3;">▶</span>
+              </div>
+            )}
+            {/* 카드 본문 */}
+            <div style="padding:12px 14px;">
+              <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                {v.data.has_transcript ? (
+                  <span class="badge badge-indigo" style="font-size:10px;">요약있음</span>
+                ) : (
+                  <span class="badge" style="font-size:10px; background:rgba(255,255,255,0.05); color:var(--muted); border:1px solid var(--border);">링크</span>
+                )}
+                {v.data.category && (
+                  <span style="font-size:10px; color:var(--muted);">{v.data.category}</span>
+                )}
+              </div>
+              <p style="font-size:13px; font-weight:600; color:var(--text); line-height:1.4; margin-bottom:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                {v.data.title ?? v.id}
+              </p>
+              {v.data.channel && (
+                <p style="font-size:11px; color:var(--muted2);">{v.data.channel}</p>
+              )}
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  )}
+
+</Layout>

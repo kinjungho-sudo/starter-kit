@@ -1,0 +1,82 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+let all: any[] = [];
+try { all = await getCollection('quotes'); } catch { all = []; }
+
+const sorted = [...all].sort((a, b) =>
+  (b.data.created ?? '').localeCompare(a.data.created ?? '')
+);
+
+const authors = [...new Set(sorted.map((q: any) => q.data.author).filter(Boolean))].sort();
+const filterAuthor = Astro.url.searchParams.get('author') ?? '';
+const filtered = filterAuthor ? sorted.filter((q: any) => q.data.author === filterAuthor) : sorted;
+---
+
+<Layout title="좋은 글" activeTab="quotes">
+
+  <div slot="sidebar">
+    <p class="sb-label">전체</p>
+    <a href="/quotes" class={`sb-item${!filterAuthor ? ' active' : ''}`}>
+      모든 글귀
+      <span class="count">{sorted.length}</span>
+    </a>
+
+    {authors.length > 0 && (
+      <>
+        <hr class="sb-divider" />
+        <p class="sb-label">작가</p>
+        {authors.map((author: string) => (
+          <a href={`/quotes?author=${encodeURIComponent(author)}`} class={`sb-item${filterAuthor === author ? ' active' : ''}`}>
+            {author}
+            <span class="count">{sorted.filter((q: any) => q.data.author === author).length}</span>
+          </a>
+        ))}
+      </>
+    )}
+  </div>
+
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+    <div>
+      <h1 class="page-title">좋은 글</h1>
+      <p class="page-meta">글귀 {filtered.length}건</p>
+    </div>
+  </div>
+
+  {filtered.length === 0 ? (
+    <div style="padding:64px 0; text-align:center; color:var(--muted2); font-size:13px;">아직 등록된 글귀가 없습니다.</div>
+  ) : (
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      {filtered.map((q: any) => (
+        <a href={`/quotes/${q.id}`} style="display:block; padding:18px 20px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; text-decoration:none; transition:border-color 0.15s, background 0.15s;"
+          onmouseover="this.style.borderColor='rgba(255,255,255,0.15)';this.style.background='rgba(255,255,255,0.05)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.background='rgba(255,255,255,0.03)'">
+          {/* 책·작가 */}
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+            <span class="card-label" style="margin:0;">{q.data.book ?? q.data.title}</span>
+            {q.data.author && (
+              <span style="font-size:11px; color:var(--muted);">· {q.data.author}</span>
+            )}
+          </div>
+          {/* 글귀 미리보기 — body에서 blockquote 라인 추출 */}
+          {q.body && (
+            <p style="font-size:14px; line-height:1.75; color:rgba(255,255,255,0.7); font-style:italic; border-left:2px solid rgba(129,140,248,0.4); padding-left:12px; margin:0 0 10px;">
+              {q.body.split('\n').find((l: string) => l.startsWith('> '))?.replace(/^> /, '').slice(0, 120) ?? ''}…
+            </p>
+          )}
+          {/* 태그·날짜 */}
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            {(q.data.tags ?? []).slice(0, 3).map((t: string) => (
+              <span class="badge badge-indigo">{t}</span>
+            ))}
+            {q.data.created && (
+              <span style="font-size:11px; color:var(--muted2); margin-left:auto;">{q.data.created}</span>
+            )}
+          </div>
+        </a>
+      ))}
+    </div>
+  )}
+
+</Layout>

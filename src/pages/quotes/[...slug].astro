@@ -1,0 +1,61 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  let quotes: any[] = [];
+  try { quotes = await getCollection('quotes'); } catch { quotes = []; }
+  return quotes.map(entry => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<Layout title={entry.data.book ?? entry.data.title ?? '글귀'} activeTab="quotes">
+
+  <div slot="sidebar">
+    <div class="sidebar-section">
+      <a href="/quotes" class="sidebar-link">← 좋은 글 목록</a>
+    </div>
+    <div class="sidebar-section">
+      <p class="sidebar-label">출처</p>
+      {entry.data.book && (
+        <p style="padding:4px 1rem; font-size:12px; color:var(--text); font-weight:600;">{entry.data.book}</p>
+      )}
+      {entry.data.author && (
+        <p style="padding:4px 1rem; font-size:12px; color:var(--muted);">{entry.data.author}</p>
+      )}
+      {entry.data.platform && (
+        <p style="padding:4px 1rem; font-size:12px; color:var(--muted);">{entry.data.platform}</p>
+      )}
+      {entry.data.created && (
+        <p style="padding:4px 1rem; font-size:12px; color:var(--muted2);">{entry.data.created}</p>
+      )}
+    </div>
+    {entry.data.tags && entry.data.tags.length > 0 && (
+      <div class="sidebar-section">
+        <p class="sidebar-label">태그</p>
+        {entry.data.tags.map((t: string) => (
+          <p style="padding:4px 1rem; font-size:12px; color:var(--muted);">{t}</p>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <div class="page-header">
+    <p class="card-label">좋은 글</p>
+    <h1>{entry.data.book ?? entry.data.title}</h1>
+    {entry.data.author && (
+      <p style="font-size:13px; color:var(--muted); margin-top:4px;">{entry.data.author}</p>
+    )}
+  </div>
+
+  <article style="line-height:1.9; font-size:15px; color:rgba(255,255,255,0.82); max-width:680px;">
+    <Content />
+  </article>
+
+</Layout>

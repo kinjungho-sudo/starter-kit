@@ -1,0 +1,96 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  let videos: any[] = [];
+  try { videos = await getCollection('videos'); } catch { videos = []; }
+  return videos.map(entry => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const ytId = entry.data.youtube_id ?? (entry.data.url ? entry.data.url.match(/(?:v=|youtu\.be\/)([^&\s]+)/)?.[1] : null);
+const ytUrl = entry.data.url ?? (ytId ? `https://www.youtube.com/watch?v=${ytId}` : null);
+---
+
+<Layout title={entry.data.title ?? '영상'} activeTab="videos">
+
+  <div slot="sidebar">
+    <div class="sidebar-section">
+      <a href="/videos" class="sidebar-link">← 유튜브 목록</a>
+    </div>
+    <div class="sidebar-section">
+      <p class="sidebar-label">영상 정보</p>
+      {entry.data.channel && (
+        <p style="padding:4px 1rem; font-size:12px; color:var(--muted);">{entry.data.channel}</p>
+      )}
+      {entry.data.category && (
+        <p style="padding:4px 1rem; font-size:12px; color:var(--muted);">{entry.data.category}</p>
+      )}
+      {entry.data.created && (
+        <p style="padding:4px 1rem; font-size:12px; color:var(--muted2);">{entry.data.created}</p>
+      )}
+      {ytUrl && (
+        <a href={ytUrl} target="_blank" rel="noopener"
+           style="padding:4px 1rem; font-size:12px; color:var(--accent); display:block; text-decoration:none;">
+          YouTube에서 보기 ↗
+        </a>
+      )}
+    </div>
+    {entry.data.tags && entry.data.tags.length > 0 && (
+      <div class="sidebar-section">
+        <p class="sidebar-label">태그</p>
+        {entry.data.tags.map((t: string) => (
+          <p style="padding:4px 1rem; font-size:12px; color:var(--muted);">{t}</p>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <div class="page-header">
+    <p class="card-label">
+      {entry.data.has_transcript ? '요약있음' : '링크'}
+    </p>
+    <h1>{entry.data.title ?? entry.id}</h1>
+  </div>
+
+  {/* 유튜브 embed — transcript 있으면 embed, 없으면 썸네일 + 링크 */}
+  {ytId && (
+    <div style="max-width:680px; margin-bottom:24px;">
+      {entry.data.has_transcript ? (
+        <div style="position:relative; padding-bottom:56.25%; height:0; border-radius:12px; overflow:hidden; background:#000;">
+          <iframe
+            src={`https://www.youtube.com/embed/${ytId}`}
+            style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          />
+        </div>
+      ) : (
+        <a href={ytUrl!} target="_blank" rel="noopener"
+           style="display:block; position:relative; border-radius:12px; overflow:hidden;">
+          <img src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`} alt={entry.data.title ?? ''} style="width:100%; display:block;" />
+          <div style="position:absolute; inset:0; background:rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center;">
+            <span style="font-size:48px; opacity:0.9;">▶</span>
+          </div>
+        </a>
+      )}
+    </div>
+  )}
+
+  {entry.data.summary && (
+    <div style="max-width:680px; margin-bottom:24px; padding:14px 16px; background:rgba(129,140,248,0.06); border:1px solid rgba(129,140,248,0.2); border-radius:10px;">
+      <p style="font-size:10px; font-weight:800; letter-spacing:0.08em; color:#818cf8; text-transform:uppercase; margin-bottom:6px;">요약</p>
+      <p style="font-size:13px; line-height:1.7; color:rgba(255,255,255,0.75);">{entry.data.summary}</p>
+    </div>
+  )}
+
+  <article style="line-height:1.8; font-size:15px; color:rgba(255,255,255,0.82); max-width:680px;">
+    <Content />
+  </article>
+
+</Layout>
