@@ -43,9 +43,9 @@ const filtered = filterType ? all.filter((i:any) => i.data.type === filterType) 
   ) : (
     <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px;">
       {filtered.map((item:any) => (
-        <a href={`/gallery/${item.slug ?? item.id}`} class="card">
+        <a href={`/gallery/${item.id}`} class="card">
           {item.data.type && <p class="card-label">{item.data.type}</p>}
-          <p class="card-title">{item.data.title ?? item.slug ?? item.id}</p>
+          <p class="card-title">{item.data.title ?? item.id}</p>
           {item.data.maker && <p class="card-meta">by {item.data.maker}</p>}
           {item.data.link && (
             <p style="font-size:10px; color:var(--accent); opacity:0.6; margin-top:8px;">↗ 바로가기</p>

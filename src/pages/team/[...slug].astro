@@ -29,7 +29,7 @@ const { Content } = await render(entry);
 
   <div class="page-header">
     <p class="card-label">{entry.data.role ?? 'Builder'}</p>
-    <h1>{entry.data.nickname ?? entry.slug}</h1>
+    <h1>{entry.data.nickname ?? entry.id}</h1>
   </div>
   <article style="line-height: 1.8; font-size: 15px; color: rgba(255,255,255,0.82); max-width: 680px;">
     <Content />

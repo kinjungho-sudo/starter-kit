@@ -45,11 +45,11 @@ const filtered = filterCat ? all.filter((s:any) => s.data.category === filterCat
   ) : (
     <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px;">
       {filtered.map((s:any) => (
-        <a href={`/insights/${s.slug ?? s.id}`} class="card">
+        <a href={`/insights/${s.id}`} class="card">
           {(s.data.category || s.data.keywords?.length) && (
             <p class="card-label">{s.data.category ?? (s.data.keywords ?? []).join(' · ')}</p>
           )}
-          <p class="card-title">{s.data.title ?? s.slug ?? s.id}</p>
+          <p class="card-title">{s.data.title ?? s.id}</p>
           {s.data.summary && (
             <p class="card-meta" style="display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
               {s.data.summary}

@@ -42,9 +42,9 @@ const current = activeWeek != null ? (byWeek[activeWeek] ?? []) : [];
 
       <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px;">
         {current.map(m => (
-          <a href={`/archive/${m.slug}`} class="card">
-            <p class="card-label">{m.data.member ?? m.slug}</p>
-            <p class="card-title">{m.data.title ?? m.slug}</p>
+          <a href={`/archive/${m.id}`} class="card">
+            <p class="card-label">{m.data.member ?? m.id}</p>
+            <p class="card-title">{m.data.title ?? m.id}</p>
             {m.data.tags && (
               <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">
                 {(m.data.tags as string[]).slice(0,3).map(t => (

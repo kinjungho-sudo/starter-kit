@@ -33,8 +33,8 @@ const totalSubmissions = allMissions.length;
 
     <p class="sb-label">멤버</p>
     {allMembers.map(m => (
-      <a href={`/team/${m.slug}`} class="sb-item">
-        {m.data.nickname ?? m.slug}
+      <a href={`/team/${m.id}`} class="sb-item">
+        {m.data.nickname ?? m.id}
         <span class="count">{m.data.role ?? ''}</span>
       </a>
     ))}
@@ -70,9 +70,9 @@ const totalSubmissions = allMissions.length;
   {latestMissions.length > 0 ? (
     <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px; margin-bottom:28px;">
       {latestMissions.map(m => (
-        <a href={`/archive/${m.slug}`} class="card">
-          <p class="card-label">{m.data.member ?? m.slug}</p>
-          <p class="card-title">{m.data.title ?? m.slug}</p>
+        <a href={`/archive/${m.id}`} class="card">
+          <p class="card-label">{m.data.member ?? m.id}</p>
+          <p class="card-title">{m.data.title ?? m.id}</p>
           {m.data.tags && (
             <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">
               {(m.data.tags as string[]).slice(0,3).map(t => (
@@ -93,7 +93,7 @@ const totalSubmissions = allMissions.length;
   {latestAnalysis && (
     <>
       <p class="section-label" style="margin-top:8px;">최신 분석</p>
-      <a href={`/analysis/${latestAnalysis.slug}`} class="row" style="border-radius:6px; border:1px solid var(--border);">
+      <a href={`/analysis/${latestAnalysis.id}`} class="row" style="border-radius:6px; border:1px solid var(--border);">
         <span class="badge badge-indigo">W{String(latestAnalysis.data.week ?? '').padStart(2,'0')}</span>
         <span style="font-size:12px; color:var(--text);">
           {latestAnalysis.data.total_submissions != null ? `${latestAnalysis.data.total_submissions}명 제출` : ''}

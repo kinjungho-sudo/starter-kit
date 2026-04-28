@@ -17,8 +17,8 @@ const sorted = [...all].sort((a,b) => {
   <div slot="sidebar">
     <p class="sb-label">멤버</p>
     {sorted.map(m => (
-      <a href={`/team/${m.slug}`} class="sb-item">
-        {m.data.nickname ?? m.slug}
+      <a href={`/team/${m.id}`} class="sb-item">
+        {m.data.nickname ?? m.id}
         <span class="count">{m.data.role ?? ''}</span>
       </a>
     ))}
@@ -36,9 +36,9 @@ const sorted = [...all].sort((a,b) => {
   ) : (
     <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:8px;">
       {sorted.map(m => (
-        <a href={`/team/${m.slug}`} class="card">
+        <a href={`/team/${m.id}`} class="card">
           <p class="card-label">{m.data.role ?? 'Builder'}</p>
-          <p class="card-title">{m.data.nickname ?? m.slug}</p>
+          <p class="card-title">{m.data.nickname ?? m.id}</p>
           {m.data.github && <p class="card-meta">@{m.data.github}</p>}
           {m.data.joined && (
             <p style="font-size:10px; color:var(--muted2); margin-top:8px;">참여 {m.data.joined}</p>
