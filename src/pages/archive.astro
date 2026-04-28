@@ -3,38 +3,77 @@ import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
 const allMissions = await getCollection('missions');
-const byWeek = allMissions.reduce((acc, m) => {
-  const w = m.data.week ?? 0;
-  if (!acc[w]) acc[w] = [];
-  acc[w].push(m);
-  return acc;
-}, {} as Record<number, typeof allMissions>);
-const weeks = Object.keys(byWeek).map(Number).sort((a,b) => b - a);
 
-const urlWeek = Astro.url.searchParams.get('week');
-const activeWeek = urlWeek ? Number(urlWeek) : (weeks[0] ?? null);
-const current = activeWeek != null ? (byWeek[activeWeek] ?? []) : [];
+// date 필드로 연/월 그룹핑. date 없는 경우 week 번호로 추정
+function getYearMonth(m: any): string {
+  if (m.data.date) return String(m.data.date).slice(0, 7); // "2026-04"
+  // date 없으면 week 기준 fallback (week 1 = 2026-04 가정)
+  return '미분류';
+}
+
+// byYearMonth: { "2026-04": [...], "2026-05": [...] }
+const byYearMonth = allMissions.reduce((acc, m) => {
+  const ym = getYearMonth(m);
+  if (!acc[ym]) acc[ym] = [];
+  acc[ym].push(m);
+  return acc;
+}, {} as Record<string, typeof allMissions>);
+
+const yearMonths = Object.keys(byYearMonth).sort((a, b) => b.localeCompare(a)); // 최신순
+
+// 연도별로 묶기
+const byYear = yearMonths.reduce((acc, ym) => {
+  const year = ym === '미분류' ? '미분류' : ym.slice(0, 4);
+  if (!acc[year]) acc[year] = [];
+  acc[year].push(ym);
+  return acc;
+}, {} as Record<string, string[]>);
+
+const years = Object.keys(byYear).sort((a, b) => b.localeCompare(a));
+
+// 현재 선택된 연/월
+const urlYm = Astro.url.searchParams.get('ym');
+const activeYm = urlYm ?? yearMonths[0] ?? null;
+const current = activeYm ? (byYearMonth[activeYm] ?? []) : [];
+
+// 표시용 레이블
+function ymLabel(ym: string): string {
+  if (ym === '미분류') return '미분류';
+  const [y, m] = ym.split('-');
+  return `${Number(m)}월`;
+}
+function ymFullLabel(ym: string): string {
+  if (ym === '미분류') return '미분류';
+  const [y, m] = ym.split('-');
+  return `${y}년 ${Number(m)}월`;
+}
 ---
 
-<Layout title="아카이브">
+<Layout title="아카이브" activeTab="archive">
 
   <div slot="sidebar">
-    <p class="sb-label">주차</p>
-    {weeks.map(w => (
-      <a href={`/archive?week=${w}`} class={`sb-item${w === activeWeek ? ' active' : ''}`}>
-        <span class="sb-dot"></span>
-        Week {String(w).padStart(2,'0')}
-        <span class="count">{byWeek[w].length}</span>
-      </a>
+    {years.map(year => (
+      <div>
+        <p class="sb-label">{year === '미분류' ? '미분류' : `${year}년`}</p>
+        {byYear[year].map(ym => (
+          <a href={`/archive?ym=${ym}`} class={`sb-item${ym === activeYm ? ' active' : ''}`}>
+            <span class="sb-dot"></span>
+            {ymLabel(ym)}
+            <span class="count">{byYearMonth[ym].length}</span>
+          </a>
+        ))}
+      </div>
     ))}
-    {weeks.length === 0 && <p style="padding:4px 12px; font-size:11px; color:var(--muted2)">아직 없음</p>}
+    {yearMonths.length === 0 && (
+      <p style="padding:4px 12px; font-size:11px; color:var(--muted2)">아직 없음</p>
+    )}
   </div>
 
-  {activeWeek != null ? (
+  {activeYm && current.length > 0 ? (
     <>
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
         <div>
-          <h1 class="page-title">Week {String(activeWeek).padStart(2,'0')}</h1>
+          <h1 class="page-title">{ymFullLabel(activeYm)}</h1>
           <p class="page-meta">{current.length}명 제출</p>
         </div>
         <span class="badge badge-indigo">아카이브</span>
@@ -47,7 +86,7 @@ const current = activeWeek != null ? (byWeek[activeWeek] ?? []) : [];
             <p class="card-title">{m.data.title ?? m.id}</p>
             {m.data.stack && m.data.stack.length > 0 && (
               <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">
-                {(m.data.stack as string[]).slice(0,3).map(t => (
+                {(m.data.stack as string[]).slice(0, 3).map(t => (
                   <span class="badge badge-indigo">{t}</span>
                 ))}
               </div>

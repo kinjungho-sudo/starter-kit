@@ -6,28 +6,41 @@ const allMissions = await getCollection('missions');
 const allMembers  = await getCollection('members');
 const allAnalysis = await getCollection('analysis');
 
-const weeks = [...new Set(allMissions.map(m => m.data.week ?? 0))].sort((a,b) => b - a);
-const latestWeek = weeks[0] ?? null;
-const latestMissions = latestWeek != null
-  ? allMissions.filter(m => m.data.week === latestWeek).sort((a,b) =>
-      (a.data.member ?? '').localeCompare(b.data.member ?? ''))
-  : [];
-const latestAnalysis = [...allAnalysis].sort((a,b) => (b.data.week ?? 0) - (a.data.week ?? 0))[0] ?? null;
+// 연/월 그룹핑
+function getYM(m: any): string {
+  return m.data.date ? String(m.data.date).slice(0, 7) : '미분류';
+}
+const ymMap = allMissions.reduce((acc, m) => {
+  const ym = getYM(m);
+  if (!acc[ym]) acc[ym] = [];
+  acc[ym].push(m);
+  return acc;
+}, {} as Record<string, typeof allMissions>);
+const yearMonths = Object.keys(ymMap).sort((a, b) => b.localeCompare(a));
+const latestYm = yearMonths[0] ?? null;
+const latestMissions = latestYm ? (ymMap[latestYm] ?? []).sort((a,b) =>
+  (a.data.member ?? '').localeCompare(b.data.member ?? '')) : [];
+const latestAnalysis = [...allAnalysis].sort((a, b) =>
+  (b.data.finished ?? '').localeCompare(a.data.finished ?? ''))[0] ?? null;
 const totalSubmissions = allMissions.length;
 ---
 
 <Layout title="대시보드">
 
   <div slot="sidebar">
-    <p class="sb-label">주차</p>
-    {weeks.map(w => (
-      <a href={`/archive?week=${w}`} class={`sb-item${w === latestWeek ? ' active' : ''}`}>
-        <span class="sb-dot"></span>
-        Week {String(w).padStart(2,'0')}
-        <span class="count">{allMissions.filter(m => m.data.week === w).length}</span>
-      </a>
-    ))}
-    {weeks.length === 0 && <p style="padding:4px 12px; font-size:11px; color:var(--muted2)">아직 없음</p>}
+    <p class="sb-label">아카이브</p>
+    {yearMonths.map(ym => {
+      const [y, mo] = ym.split('-');
+      const label = ym === '미분류' ? '미분류' : `${y}년 ${Number(mo)}월`;
+      return (
+        <a href={`/archive?ym=${ym}`} class={`sb-item${ym === latestYm ? ' active' : ''}`}>
+          <span class="sb-dot"></span>
+          {label}
+          <span class="count">{ymMap[ym].length}</span>
+        </a>
+      );
+    })}
+    {yearMonths.length === 0 && <p style="padding:4px 12px; font-size:11px; color:var(--muted2)">아직 없음</p>}
 
     <hr class="sb-divider" />
 
@@ -43,8 +56,8 @@ const totalSubmissions = allMissions.length;
   <!-- stat 행 -->
   <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:24px;">
     <div class="stat">
-      <div class="stat-value">{latestWeek != null ? `W${String(latestWeek).padStart(2,'0')}` : '—'}</div>
-      <div class="stat-label">현재 주차</div>
+      <div class="stat-value">{latestYm ? latestYm.slice(5) + '월' : '—'}</div>
+      <div class="stat-label">최신 월</div>
     </div>
     <div class="stat">
       <div class="stat-value">{latestMissions.length}</div>
@@ -59,10 +72,10 @@ const totalSubmissions = allMissions.length;
   <!-- 페이지 헤더 -->
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
     <p class="section-label">
-      {latestWeek != null ? `Week ${String(latestWeek).padStart(2,'0')} 제출물` : '제출물'}
+      {latestYm ? (() => { const [y,mo]=latestYm.split('-'); return `${y}년 ${Number(mo)}월 제출물`; })() : '제출물'}
     </p>
-    {latestWeek != null && (
-      <a href="/archive" style="font-size:11px; color:var(--accent); text-decoration:none;">전체 보기 →</a>
+    {latestYm && (
+      <a href={`/archive?ym=${latestYm}`} style="font-size:11px; color:var(--accent); text-decoration:none;">전체 보기 →</a>
     )}
   </div>
 
