@@ -2,54 +2,46 @@
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
-const allAnalysis = await getCollection('analysis');
-const sorted = allAnalysis.sort((a, b) => b.data.week - a.data.week);
+const all = await getCollection('analysis');
+const sorted = [...all].sort((a,b) => (b.data.week ?? 0) - (a.data.week ?? 0));
 ---
 
 <Layout title="분석">
-  <section class="py-16 px-6">
-    <div class="max-w-4xl mx-auto">
-      <div class="mb-12">
-        <div class="text-xs font-black uppercase tracking-widest text-indigo-400 mb-3">ANALYSIS</div>
-        <h1 class="text-3xl font-black text-white mb-3">AI 주간 분석 리포트</h1>
-        <p class="text-white/50">매주 과제를 AI가 분석해 트렌드와 인사이트를 도출합니다.</p>
-      </div>
 
-      {sorted.length === 0 ? (
-        <div class="text-center py-20">
-          <p class="text-white/30 text-sm mb-2">아직 분석 리포트가 없습니다.</p>
-          <p class="text-white/20 text-xs">
-            <code class="bg-white/10 px-2 py-0.5 rounded">/analyze N</code> 명령어를 실행하면 자동 생성됩니다.
-          </p>
-        </div>
-      ) : (
-        <div class="space-y-6">
-          {sorted.map(report => (
-            <a href={`/analysis/${report.id}`}
-              class="group block bg-white/[0.04] border border-white/10 hover:border-indigo-400/30 rounded-2xl p-8 transition-colors">
-              <div class="flex items-center gap-3 mb-4">
-                <span class="text-xs font-black uppercase tracking-widest text-indigo-400 border border-indigo-400/30 rounded-full px-3 py-1">
-                  WEEK {report.data.week}
-                </span>
-                <span class="text-xs text-white/30">
-                  {report.data.date}
-                  {report.data.total_submissions && ` · ${report.data.total_submissions}건 제출`}
-                </span>
-              </div>
-              <div class="flex flex-wrap gap-2 mt-2">
-                {(report.data.tags ?? []).filter((t: string) => t !== '주차분석').map((tag: string) => (
-                  <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-400/20">{tag}</span>
-                ))}
-              </div>
-              <div class="text-xs text-indigo-400/60 mt-4 group-hover:text-indigo-400 transition-colors">리포트 보기 →</div>
-            </a>
-          ))}
-        </div>
-      )}
+  <div slot="sidebar">
+    <p class="sb-label">리포트</p>
+    {sorted.map(r => (
+      <a href={`/analysis/${r.slug}`} class="sb-item">
+        <span class="sb-dot"></span>
+        Week {String(r.data.week ?? '').padStart(2,'0')}
+        <span class="count">{r.data.total_submissions ?? 0}명</span>
+      </a>
+    ))}
+    {sorted.length === 0 && <p style="padding:4px 12px; font-size:11px; color:var(--muted2)">아직 없음</p>}
+  </div>
 
-      <div class="mt-12 text-center text-white/30 text-sm">
-        분석 리포트는 <code class="text-white/50 bg-white/10 px-2 py-0.5 rounded">/analyze N</code>으로 자동 생성됩니다.
-      </div>
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+    <div>
+      <h1 class="page-title">분석 리포트</h1>
+      <p class="page-meta">AI 주간 분석 {sorted.length}건</p>
     </div>
-  </section>
+  </div>
+
+  {sorted.length === 0 ? (
+    <div style="padding:64px 0; text-align:center; color:var(--muted2); font-size:13px;">
+      <code style="color:var(--accent); opacity:0.6;">/analyze N</code> 을 실행하면 자동 생성됩니다.
+    </div>
+  ) : (
+    <div style="display:flex; flex-direction:column; gap:2px;">
+      {sorted.map(r => (
+        <a href={`/analysis/${r.slug}`} class="row">
+          <span class="badge badge-indigo">W{String(r.data.week ?? '').padStart(2,'0')}</span>
+          <span style="font-size:12px; color:var(--text); flex:1;">Week {r.data.week} 분석 리포트</span>
+          <span style="font-size:11px; color:var(--muted2);">{r.data.total_submissions ?? 0}명 · {r.data.date ?? ''}</span>
+          <span style="font-size:11px; color:var(--accent);">→</span>
+        </a>
+      ))}
+    </div>
+  )}
+
 </Layout>

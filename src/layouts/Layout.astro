@@ -3,84 +3,69 @@ import '../styles/global.css';
 
 interface Props {
   title: string;
-  description?: string;
 }
 
-const { title, description = '빌더팀 AAA — AI로 만들고, 기록하고, 성장하는 8주 스터디' } = Astro.props;
-const currentPath = Astro.url.pathname;
+const { title } = Astro.props;
+const p = Astro.url.pathname;
 
-const navLinks = [
-  { href: '/', label: '홈' },
-  { href: '/archive', label: '아카이브' },
-  { href: '/insights', label: '인사이트' },
-  { href: '/gallery', label: '갤러리' },
-  { href: '/analysis', label: '분석' },
-  { href: '/team', label: '팀' },
+const nav = [
+  { href: '/',         label: '대시보드', icon: '▣' },
+  { href: '/archive',  label: '아카이브', icon: '◫' },
+  { href: '/insights', label: '인사이트', icon: '◈' },
+  { href: '/gallery',  label: '갤러리',   icon: '◧' },
+  { href: '/analysis', label: '분석',     icon: '◉' },
+  { href: '/team',     label: '팀',       icon: '◎' },
 ];
+
+function active(href: string) {
+  if (href === '/') return p === '/';
+  return p.startsWith(href);
+}
 ---
 
 <html lang="ko">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <meta name="description" content={description} />
-    <title>{title} | 빌더팀 AAA</title>
-  </head>
-  <body class="min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="sticky top-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-md">
-      <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <a href="/" class="font-black text-xl tracking-tight text-white">
-          빌더팀 <span class="text-indigo-400">AAA</span>
-        </a>
-        <nav class="hidden md:flex items-center gap-6">
-          {navLinks.map(link => (
-            <a
-              href={link.href}
-              class={`text-sm font-medium transition-colors ${
-                currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href))
-                  ? 'text-indigo-400'
-                  : 'text-white/60 hover:text-white'
-              }`}
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
-        <!-- Mobile menu button (simple) -->
-        <button class="md:hidden text-white/60 hover:text-white text-sm" id="mobile-toggle">메뉴</button>
-      </div>
-      <!-- Mobile nav -->
-      <div class="md:hidden hidden border-t border-white/10 bg-black/90" id="mobile-menu">
-        <div class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-3">
-          {navLinks.map(link => (
-            <a href={link.href} class="text-sm text-white/70 hover:text-white">{link.label}</a>
-          ))}
-        </div>
-      </div>
-    </header>
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width" />
+  <title>{title} — Comind Works</title>
+</head>
+<body class="h-screen flex flex-col overflow-hidden" style="background:#0d0d0f; color:#e2e8f0; font-family:'Pretendard',-apple-system,sans-serif;">
 
-    <!-- Main -->
-    <main class="flex-1">
+  <!-- 토크바 -->
+  <header style="height:40px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; padding:0 16px; gap:8px; background:#0d0d0f; flex-shrink:0; position:sticky; top:0; z-index:50;">
+    <a href="/" style="font-size:13px; font-weight:800; letter-spacing:-0.03em; color:#fff; text-decoration:none; margin-right:4px;">
+      Comind<span style="color:#818cf8;">Works</span>
+    </a>
+    <div style="width:1px; height:14px; background:rgba(255,255,255,0.08); margin:0 4px;"></div>
+    <nav style="display:flex; gap:2px;">
+      {nav.map(link => (
+        <a href={link.href} style={active(link.href)
+          ? 'height:28px; padding:0 10px; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:#fff; background:rgba(255,255,255,0.09); border-radius:6px; text-decoration:none;'
+          : 'height:28px; padding:0 10px; display:flex; align-items:center; gap:5px; font-size:12px; font-weight:400; color:rgba(255,255,255,0.38); border-radius:6px; text-decoration:none; transition:color 0.15s, background 0.15s;'}
+          onmouseover={!active(link.href) ? "this.style.color='rgba(255,255,255,0.7)';this.style.background='rgba(255,255,255,0.05)';" : ''}
+          onmouseout={!active(link.href) ? "this.style.color='rgba(255,255,255,0.38)';this.style.background='transparent';" : ''}
+        >
+          {link.label}
+        </a>
+      ))}
+    </nav>
+  </header>
+
+  <!-- 바디 -->
+  <div style="display:flex; flex:1; min-height:0; overflow:hidden;">
+
+    <!-- 사이드바 -->
+    <aside style="width:200px; flex-shrink:0; border-right:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; overflow-y:auto; padding:8px 0;">
+      <slot name="sidebar" />
+    </aside>
+
+    <!-- 콘텐츠 -->
+    <main style="flex:1; min-width:0; overflow-y:auto; padding:24px 28px;">
       <slot />
     </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-white/10 py-10 mt-20">
-      <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div class="text-white/40 text-sm font-black tracking-tight">
-          빌더팀 <span class="text-indigo-400/60">AAA</span>
-        </div>
-        <p class="text-white/30 text-xs">© 2026 빌더팀 AAA. All rights reserved.</p>
-      </div>
-    </footer>
+  </div>
 
-    <script>
-      const btn = document.getElementById('mobile-toggle');
-      const menu = document.getElementById('mobile-menu');
-      btn?.addEventListener('click', () => menu?.classList.toggle('hidden'));
-    </script>
-  </body>
+</body>
 </html>

@@ -2,108 +2,62 @@
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
-const allInsights = await getCollection('insights');
+let all: any[] = [];
+try { all = await getCollection('insights'); } catch { all = await getCollection('skills'); }
 
-const url = Astro.url;
-const filterCat = url.searchParams.get('cat') ?? '';
-const filterType = url.searchParams.get('type') ?? '';
-
-const categories = [...new Set(allInsights.map(s => s.data.category).filter(Boolean))].sort();
-
-const filtered = allInsights.filter(s => {
-  const catMatch = !filterCat || s.data.category === filterCat;
-  const typeMatch = !filterType || s.data.type === filterType;
-  return catMatch && typeMatch;
-}).sort((a, b) => (b.data.created ?? '').localeCompare(a.data.created ?? ''));
-
-const categoryEmoji: Record<string, string> = {
-  'AI에이전트': '🤖',
-  '창업': '🚀',
-  '나': '💭',
-  '자동화': '⚙️',
-  '콘텐츠': '✍️',
-  '독서': '📚',
-};
+const categories = [...new Set(all.map((s:any) => s.data.category).filter(Boolean))].sort();
+const filterCat = Astro.url.searchParams.get('cat') ?? '';
+const filtered = filterCat ? all.filter((s:any) => s.data.category === filterCat) : all;
 ---
 
 <Layout title="인사이트">
-  <section class="py-12 px-6">
-    <div class="max-w-6xl mx-auto">
 
-      <div class="mb-10">
-        <div class="text-xs font-black uppercase tracking-widest text-indigo-400 mb-3">INSIGHTS</div>
-        <h1 class="text-3xl font-black text-white mb-3">지식 저장소</h1>
-        <p class="text-white/50">
-          큐레이션한 아티클과 개인 생각을 기록하는 공개 두뇌.
-          {allInsights.length}개의 노트 · {categories.length}개 카테고리
-        </p>
-      </div>
+  <div slot="sidebar">
+    <p class="sb-label">전체</p>
+    <a href="/insights" class={`sb-item${!filterCat ? ' active' : ''}`}>
+      모든 인사이트
+      <span class="count">{all.length}</span>
+    </a>
 
-      <!-- 필터 바 -->
-      <div class="flex flex-wrap gap-2 mb-8">
-        <a href="/insights"
-           class={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${!filterCat && !filterType ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-white/20 text-white/60 hover:border-white/40 hover:text-white'}`}>
-          전체 {allInsights.length}
-        </a>
-        {categories.map(cat => (
-          <a href={`/insights?cat=${encodeURIComponent(cat)}`}
-             class={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${filterCat === cat ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-white/20 text-white/60 hover:border-white/40 hover:text-white'}`}>
-            {categoryEmoji[cat] ?? ''} {cat} {allInsights.filter(s => s.data.category === cat).length}
+    {categories.length > 0 && (
+      <>
+        <hr class="sb-divider" />
+        <p class="sb-label">카테고리</p>
+        {categories.map((cat: string) => (
+          <a href={`/insights?cat=${encodeURIComponent(cat)}`} class={`sb-item${filterCat === cat ? ' active' : ''}`}>
+            {cat}
+            <span class="count">{all.filter((s:any) => s.data.category === cat).length}</span>
           </a>
         ))}
-        <div class="ml-auto flex gap-2">
-          <a href={`/insights${filterCat ? '?cat=' + encodeURIComponent(filterCat) : ''}${filterCat ? '&type=url' : '?type=url'}`}
-             class={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${filterType === 'url' ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-white/20 text-white/60 hover:border-white/40 hover:text-white'}`}>
-            🔗 큐레이션
-          </a>
-          <a href={`/insights${filterCat ? '?cat=' + encodeURIComponent(filterCat) : ''}${filterCat ? '&type=thought' : '?type=thought'}`}
-             class={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${filterType === 'thought' ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-white/20 text-white/60 hover:border-white/40 hover:text-white'}`}>
-            💡 생각
-          </a>
-        </div>
-      </div>
+      </>
+    )}
+  </div>
 
-      {filtered.length === 0 ? (
-        <div class="text-center py-20">
-          <p class="text-white/30 text-sm">조건에 맞는 노트가 없습니다.</p>
-        </div>
-      ) : (
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(s => (
-            <a href={`/insights/${s.id}`}
-               class="group block bg-white/[0.04] border border-white/10 hover:border-indigo-400/40 rounded-2xl p-5 transition-all">
-              <div class="flex items-center gap-2 mb-3">
-                {s.data.category && (
-                  <span class="text-xs font-bold text-indigo-400">
-                    {categoryEmoji[s.data.category] ?? ''} {s.data.category}
-                  </span>
-                )}
-                {s.data.type && (
-                  <span class="text-xs text-white/30 ml-auto">
-                    {s.data.type === 'url' ? '🔗' : '💡'}
-                  </span>
-                )}
-              </div>
-              <h3 class="font-bold text-white text-sm leading-snug mb-2 group-hover:text-indigo-200 transition-colors line-clamp-2">
-                {s.data.title ?? s.id}
-              </h3>
-              {s.data.tags && s.data.tags.length > 0 && (
-                <div class="flex flex-wrap gap-1 mt-3">
-                  {s.data.tags.slice(0, 3).map((tag: string) => (
-                    <span class="text-xs px-2 py-0.5 rounded-full bg-white/[0.06] text-white/50 border border-white/10">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {s.data.created && (
-                <p class="text-xs text-white/25 mt-3">{s.data.created}</p>
-              )}
-            </a>
-          ))}
-        </div>
-      )}
-
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+    <div>
+      <h1 class="page-title">{filterCat ? filterCat : '인사이트'}</h1>
+      <p class="page-meta">{filtered.length}건</p>
     </div>
-  </section>
+  </div>
+
+  {filtered.length === 0 ? (
+    <div style="padding:64px 0; text-align:center; color:var(--muted2); font-size:13px;">아직 등록된 인사이트가 없습니다.</div>
+  ) : (
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px;">
+      {filtered.map((s:any) => (
+        <a href={`/insights/${s.slug ?? s.id}`} class="card">
+          {(s.data.category || s.data.keywords?.length) && (
+            <p class="card-label">{s.data.category ?? (s.data.keywords ?? []).join(' · ')}</p>
+          )}
+          <p class="card-title">{s.data.title ?? s.slug ?? s.id}</p>
+          {s.data.summary && (
+            <p class="card-meta" style="display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+              {s.data.summary}
+            </p>
+          )}
+        </a>
+      ))}
+    </div>
+  )}
+
 </Layout>

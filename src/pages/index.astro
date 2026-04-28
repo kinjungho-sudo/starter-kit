@@ -3,126 +3,105 @@ import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
 const allMissions = await getCollection('missions');
+const allMembers  = await getCollection('members');
 const allAnalysis = await getCollection('analysis');
 
-// 최신 주차 판별
-const latestWeek = allAnalysis.sort((a, b) => b.data.week - a.data.week)[0];
-const latestWeekNum = latestWeek?.data.week ?? 1;
-
-// 최신 주차 제출 과제
-const latestMissions = allMissions
-  .filter(m => m.data.week === latestWeekNum)
-  .sort((a, b) => a.data.member.localeCompare(b.data.member));
-
-// Stats
-const totalMembers = [...new Set(allMissions.map(m => m.data.member))].length + 2; // +운영자+미제출
+const weeks = [...new Set(allMissions.map(m => m.data.week ?? 0))].sort((a,b) => b - a);
+const latestWeek = weeks[0] ?? null;
+const latestMissions = latestWeek != null
+  ? allMissions.filter(m => m.data.week === latestWeek).sort((a,b) =>
+      (a.data.member ?? '').localeCompare(b.data.member ?? ''))
+  : [];
+const latestAnalysis = [...allAnalysis].sort((a,b) => (b.data.week ?? 0) - (a.data.week ?? 0))[0] ?? null;
 const totalSubmissions = allMissions.length;
-const deployedCount = allMissions.filter(m => m.data.url).length;
 ---
 
-<Layout title="홈">
-  <!-- Hero -->
-  <section class="relative py-28 px-6 overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/30 via-transparent to-violet-900/20 pointer-events-none"></div>
-    <div class="max-w-4xl mx-auto text-center relative">
-      <div class="inline-block text-xs font-black tracking-widest uppercase text-indigo-400 border border-indigo-400/30 rounded-full px-4 py-1.5 mb-6">
-        AI 스터디 빌더팀
-      </div>
-      <h1 class="text-4xl md:text-6xl font-black tracking-tight text-white mb-6 leading-tight">
-        AI로 만들고,<br />기록하고, <span class="text-indigo-400">성장한다</span>
-      </h1>
-      <p class="text-lg text-white/60 max-w-xl mx-auto mb-10 leading-relaxed">
-        매주 실제 AI 도구로 결과물을 만들고 공유하는 8주 빌더 스터디입니다.
-        만드는 것보다 배포하는 것이 진짜 시작입니다.
-      </p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="/archive" class="inline-flex items-center justify-center h-11 px-7 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-bold transition-colors text-sm">
-          과제 아카이브 보기
-        </a>
-        <a href="/team" class="inline-flex items-center justify-center h-11 px-7 rounded-xl border border-white/20 hover:border-white/40 text-white/80 hover:text-white font-medium transition-colors text-sm">
-          팀 소개
-        </a>
-      </div>
-    </div>
-  </section>
+<Layout title="대시보드">
 
-  <!-- Stats -->
-  <section class="py-12 border-y border-white/10 bg-white/[0.02]">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-        <div class="text-center">
-          <div class="text-3xl font-black text-indigo-400 mb-1">5명</div>
-          <div class="text-sm text-white/50">활동 멤버</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-black text-indigo-400 mb-1">{latestWeekNum}주차</div>
-          <div class="text-sm text-white/50">진행 주차</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-black text-indigo-400 mb-1">{totalSubmissions}건</div>
-          <div class="text-sm text-white/50">총 제출 과제</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-black text-indigo-400 mb-1">{deployedCount}개</div>
-          <div class="text-sm text-white/50">배포된 결과물</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Latest Week -->
-  <section class="py-20 px-6">
-    <div class="max-w-6xl mx-auto">
-      <div class="flex items-end justify-between mb-10">
-        <div>
-          <div class="text-xs font-black uppercase tracking-widest text-indigo-400 mb-2">WEEK {latestWeekNum}</div>
-          {latestWeek && (
-            <h2 class="text-2xl md:text-3xl font-black text-white">"{latestWeek.data.week}주차 분석 리포트"</h2>
-          )}
-          {latestWeek && (
-            <p class="text-white/40 text-sm mt-1">{latestWeek.data.date}</p>
-          )}
-        </div>
-        <a href="/archive" class="text-sm text-indigo-400 hover:text-indigo-300 font-medium hidden md:block">
-          전체 보기 →
-        </a>
-      </div>
-
-      {latestMissions.length > 0 ? (
-        <div class="grid md:grid-cols-3 gap-5">
-          {latestMissions.map(mission => (
-            <a href={`/archive/week-${String(mission.data.week).padStart(2,'0')}#${mission.data.member}`}
-              class="group block bg-white/[0.04] hover:bg-white/[0.07] border border-white/10 hover:border-indigo-400/40 rounded-2xl p-6 transition-all">
-              <div class="text-xs font-bold text-indigo-400 mb-2">{mission.data.member}</div>
-              <h3 class="font-bold text-white text-base mb-2 group-hover:text-indigo-200 transition-colors leading-snug">
-                {mission.data.title}
-              </h3>
-              <div class="flex flex-wrap gap-1.5 mt-3">
-                {(mission.data.stack ?? []).slice(0, 3).map((s: string) => (
-                  <span class="text-xs px-2 py-0.5 rounded-full bg-white/[0.06] text-white/50 border border-white/10">{s}</span>
-                ))}
-              </div>
-              <div class="text-xs text-indigo-400/60 mt-4 group-hover:text-indigo-400 transition-colors">자세히 보기 →</div>
-            </a>
-          ))}
-        </div>
-      ) : (
-        <p class="text-white/30 text-sm">아직 제출된 과제가 없습니다.</p>
-      )}
-    </div>
-  </section>
-
-  <!-- CTA -->
-  <section class="py-20 px-6">
-    <div class="max-w-2xl mx-auto text-center bg-gradient-to-br from-indigo-900/40 to-violet-900/30 border border-indigo-400/20 rounded-3xl p-12">
-      <h2 class="text-2xl font-black text-white mb-4">매주 쌓이는 실전 기록</h2>
-      <p class="text-white/60 mb-8 leading-relaxed">
-        AI 도구로 실제 결과물을 만드는 과정을 모두 공개합니다.<br />
-        과제, 삽질, 인사이트, 분석까지.
-      </p>
-      <a href="/analysis" class="inline-flex items-center justify-center h-11 px-7 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-bold transition-colors text-sm">
-        AI 분석 리포트 보기
+  <div slot="sidebar">
+    <p class="sb-label">주차</p>
+    {weeks.map(w => (
+      <a href={`/archive?week=${w}`} class={`sb-item${w === latestWeek ? ' active' : ''}`}>
+        <span class="sb-dot"></span>
+        Week {String(w).padStart(2,'0')}
+        <span class="count">{allMissions.filter(m => m.data.week === w).length}</span>
       </a>
+    ))}
+    {weeks.length === 0 && <p style="padding:4px 12px; font-size:11px; color:var(--muted2)">아직 없음</p>}
+
+    <hr class="sb-divider" />
+
+    <p class="sb-label">멤버</p>
+    {allMembers.map(m => (
+      <a href={`/team/${m.slug}`} class="sb-item">
+        {m.data.nickname ?? m.slug}
+        <span class="count">{m.data.role ?? ''}</span>
+      </a>
+    ))}
+  </div>
+
+  <!-- stat 행 -->
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:24px;">
+    <div class="stat">
+      <div class="stat-value">{latestWeek != null ? `W${String(latestWeek).padStart(2,'0')}` : '—'}</div>
+      <div class="stat-label">현재 주차</div>
     </div>
-  </section>
+    <div class="stat">
+      <div class="stat-value">{latestMissions.length}</div>
+      <div class="stat-label">이번 주 제출</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{allMembers.length}</div>
+      <div class="stat-label">전체 멤버</div>
+    </div>
+  </div>
+
+  <!-- 페이지 헤더 -->
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+    <p class="section-label">
+      {latestWeek != null ? `Week ${String(latestWeek).padStart(2,'0')} 제출물` : '제출물'}
+    </p>
+    {latestWeek != null && (
+      <a href="/archive" style="font-size:11px; color:var(--accent); text-decoration:none;">전체 보기 →</a>
+    )}
+  </div>
+
+  <!-- 제출물 카드 -->
+  {latestMissions.length > 0 ? (
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px; margin-bottom:28px;">
+      {latestMissions.map(m => (
+        <a href={`/archive/${m.slug}`} class="card">
+          <p class="card-label">{m.data.member ?? m.slug}</p>
+          <p class="card-title">{m.data.title ?? m.slug}</p>
+          {m.data.tags && (
+            <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">
+              {(m.data.tags as string[]).slice(0,3).map(t => (
+                <span class="badge badge-indigo">{t}</span>
+              ))}
+            </div>
+          )}
+        </a>
+      ))}
+    </div>
+  ) : (
+    <div style="padding:48px 0; text-align:center; color:var(--muted2); font-size:13px;">
+      아직 제출된 과제가 없습니다.
+    </div>
+  )}
+
+  <!-- 최신 분석 -->
+  {latestAnalysis && (
+    <>
+      <p class="section-label" style="margin-top:8px;">최신 분석</p>
+      <a href={`/analysis/${latestAnalysis.slug}`} class="row" style="border-radius:6px; border:1px solid var(--border);">
+        <span class="badge badge-indigo">W{String(latestAnalysis.data.week ?? '').padStart(2,'0')}</span>
+        <span style="font-size:12px; color:var(--text);">
+          {latestAnalysis.data.total_submissions != null ? `${latestAnalysis.data.total_submissions}명 제출` : ''}
+          {latestAnalysis.data.date ? ` · ${latestAnalysis.data.date}` : ''}
+        </span>
+        <span style="margin-left:auto; font-size:11px; color:var(--accent);">→</span>
+      </a>
+    </>
+  )}
+
 </Layout>
