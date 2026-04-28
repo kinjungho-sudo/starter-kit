@@ -3,53 +3,107 @@ import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
 const allInsights = await getCollection('insights');
-const sorted = allInsights.sort((a, b) => (b.data.week ?? 0) - (a.data.week ?? 0));
+
+const url = Astro.url;
+const filterCat = url.searchParams.get('cat') ?? '';
+const filterType = url.searchParams.get('type') ?? '';
+
+const categories = [...new Set(allInsights.map(s => s.data.category).filter(Boolean))].sort();
+
+const filtered = allInsights.filter(s => {
+  const catMatch = !filterCat || s.data.category === filterCat;
+  const typeMatch = !filterType || s.data.type === filterType;
+  return catMatch && typeMatch;
+}).sort((a, b) => (b.data.created ?? '').localeCompare(a.data.created ?? ''));
+
+const categoryEmoji: Record<string, string> = {
+  'AI에이전트': '🤖',
+  '창업': '🚀',
+  '나': '💭',
+  '자동화': '⚙️',
+  '콘텐츠': '✍️',
+  '독서': '📚',
+};
 ---
 
 <Layout title="인사이트">
-  <section class="py-16 px-6">
-    <div class="max-w-4xl mx-auto">
-      <div class="mb-12">
+  <section class="py-12 px-6">
+    <div class="max-w-6xl mx-auto">
+
+      <div class="mb-10">
         <div class="text-xs font-black uppercase tracking-widest text-indigo-400 mb-3">INSIGHTS</div>
-        <h1 class="text-3xl font-black text-white mb-3">스킬 & 인사이트</h1>
-        <p class="text-white/50">멤버들이 직접 발견한 도구, 기법, 배움을 공유합니다.</p>
+        <h1 class="text-3xl font-black text-white mb-3">지식 저장소</h1>
+        <p class="text-white/50">
+          큐레이션한 아티클과 개인 생각을 기록하는 공개 두뇌.
+          {allInsights.length}개의 노트 · {categories.length}개 카테고리
+        </p>
       </div>
 
-      {sorted.length === 0 ? (
+      <!-- 필터 바 -->
+      <div class="flex flex-wrap gap-2 mb-8">
+        <a href="/insights"
+           class={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${!filterCat && !filterType ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-white/20 text-white/60 hover:border-white/40 hover:text-white'}`}>
+          전체 {allInsights.length}
+        </a>
+        {categories.map(cat => (
+          <a href={`/insights?cat=${encodeURIComponent(cat)}`}
+             class={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${filterCat === cat ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-white/20 text-white/60 hover:border-white/40 hover:text-white'}`}>
+            {categoryEmoji[cat] ?? ''} {cat} {allInsights.filter(s => s.data.category === cat).length}
+          </a>
+        ))}
+        <div class="ml-auto flex gap-2">
+          <a href={`/insights${filterCat ? '?cat=' + encodeURIComponent(filterCat) : ''}${filterCat ? '&type=url' : '?type=url'}`}
+             class={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${filterType === 'url' ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-white/20 text-white/60 hover:border-white/40 hover:text-white'}`}>
+            🔗 큐레이션
+          </a>
+          <a href={`/insights${filterCat ? '?cat=' + encodeURIComponent(filterCat) : ''}${filterCat ? '&type=thought' : '?type=thought'}`}
+             class={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${filterType === 'thought' ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-white/20 text-white/60 hover:border-white/40 hover:text-white'}`}>
+            💡 생각
+          </a>
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
         <div class="text-center py-20">
-          <p class="text-white/30 text-sm mb-2">아직 등록된 인사이트가 없습니다.</p>
-          <p class="text-white/20 text-xs">
-            <code class="bg-white/10 px-2 py-0.5 rounded">02_skill_insight/</code> 폴더에 마크다운 파일을 추가하면 자동 반영됩니다.
-          </p>
+          <p class="text-white/30 text-sm">조건에 맞는 노트가 없습니다.</p>
         </div>
       ) : (
-        <div class="space-y-6">
-          {sorted.map(item => (
-            <a href={`/insights/${item.id}`}
-              class="group block bg-white/[0.04] border border-white/10 hover:border-indigo-400/30 rounded-2xl p-6 transition-colors">
-              <div class="flex items-center gap-3 mb-3">
-                <span class="text-xs font-bold text-indigo-400">{item.data.author}</span>
-                {item.data.week && <span class="text-xs text-white/30">Week {item.data.week}</span>}
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map(s => (
+            <a href={`/insights/${s.id}`}
+               class="group block bg-white/[0.04] border border-white/10 hover:border-indigo-400/40 rounded-2xl p-5 transition-all">
+              <div class="flex items-center gap-2 mb-3">
+                {s.data.category && (
+                  <span class="text-xs font-bold text-indigo-400">
+                    {categoryEmoji[s.data.category] ?? ''} {s.data.category}
+                  </span>
+                )}
+                {s.data.type && (
+                  <span class="text-xs text-white/30 ml-auto">
+                    {s.data.type === 'url' ? '🔗' : '💡'}
+                  </span>
+                )}
               </div>
-              <h2 class="font-bold text-white text-lg mb-2 leading-snug group-hover:text-indigo-200 transition-colors">
-                {item.data.title}
-              </h2>
-              {item.data.summary && (
-                <p class="text-sm text-white/60 mb-4 leading-relaxed">{item.data.summary}</p>
+              <h3 class="font-bold text-white text-sm leading-snug mb-2 group-hover:text-indigo-200 transition-colors line-clamp-2">
+                {s.data.title ?? s.id}
+              </h3>
+              {s.data.tags && s.data.tags.length > 0 && (
+                <div class="flex flex-wrap gap-1 mt-3">
+                  {s.data.tags.slice(0, 3).map((tag: string) => (
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-white/[0.06] text-white/50 border border-white/10">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               )}
-              <div class="flex flex-wrap gap-2">
-                {(item.data.tags ?? []).map((tag: string) => (
-                  <span class="text-xs px-2.5 py-0.5 rounded-full bg-white/[0.06] text-white/60 border border-white/10">{tag}</span>
-                ))}
-              </div>
+              {s.data.created && (
+                <p class="text-xs text-white/25 mt-3">{s.data.created}</p>
+              )}
             </a>
           ))}
         </div>
       )}
 
-      <div class="mt-12 text-center text-white/30 text-sm">
-        인사이트는 <code class="text-white/50 bg-white/10 px-2 py-0.5 rounded">02_skill_insight/</code> 폴더에 마크다운으로 작성하면 자동 반영됩니다.
-      </div>
     </div>
   </section>
 </Layout>

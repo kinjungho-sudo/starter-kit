@@ -1,0 +1,38 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+export async function getStaticPaths() {
+  const members = await getCollection('members');
+  return members.map(entry => ({ params: { slug: entry.slug }, props: { entry } }));
+}
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+---
+<Layout title={entry.data.nickname ?? entry.slug} activeTab="team">
+
+  <div slot="sidebar">
+    <div class="sidebar-section">
+      <a href="/team" class="sidebar-link">← 팀 목록</a>
+    </div>
+    <div class="sidebar-section">
+      <p class="sidebar-label">프로필</p>
+      <p style="padding: 4px 1rem; font-size: 12px; color: var(--muted);">{entry.data.role ?? 'Builder'}</p>
+      {entry.data.github && (
+        <a href={`https://github.com/${entry.data.github}`} target="_blank" rel="noopener"
+           style="padding: 4px 1rem; font-size: 12px; color: var(--accent); display: block; text-decoration: none;">
+          @{entry.data.github} ↗
+        </a>
+      )}
+      {entry.data.joined && <p style="padding: 4px 1rem; font-size: 12px; color: var(--muted);">참여 {entry.data.joined}</p>}
+    </div>
+  </div>
+
+  <div class="page-header">
+    <p class="card-label">{entry.data.role ?? 'Builder'}</p>
+    <h1>{entry.data.nickname ?? entry.slug}</h1>
+  </div>
+  <article style="line-height: 1.8; font-size: 15px; color: rgba(255,255,255,0.82); max-width: 680px;">
+    <Content />
+  </article>
+
+</Layout>

@@ -12,32 +12,167 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const { Content } = await render(entry);
+
+const categoryEmoji: Record<string, string> = {
+  'AI에이전트': '🤖',
+  '창업': '🚀',
+  '나': '💭',
+  '자동화': '⚙️',
+  '콘텐츠': '✍️',
+  '독서': '📚',
+};
 ---
 
-<Layout title={entry.data.title}>
-  <section class="py-16 px-6">
+<Layout title={entry.data.title ?? entry.id}>
+  <section class="py-12 px-6">
     <div class="max-w-3xl mx-auto">
-      <a href="/insights" class="text-xs text-white/40 hover:text-white/70 transition-colors mb-6 inline-block">← 인사이트 목록</a>
 
-      <div class="mb-8">
-        <div class="flex items-center gap-3 mb-3">
-          <span class="text-xs font-bold text-indigo-400">{entry.data.author}</span>
+      <!-- 브레드크럼 -->
+      <div class="flex items-center gap-2 mb-8 text-sm text-white/40">
+        <a href="/insights" class="hover:text-white transition-colors">인사이트</a>
+        {entry.data.category && (
+          <>
+            <span>·</span>
+            <a href={`/insights?cat=${encodeURIComponent(entry.data.category)}`}
+               class="hover:text-white transition-colors">
+              {categoryEmoji[entry.data.category] ?? ''} {entry.data.category}
+            </a>
+          </>
+        )}
+      </div>
+
+      <!-- 헤더 -->
+      <div class="mb-10 pb-8 border-b border-white/10">
+        <div class="flex items-center gap-3 mb-4 flex-wrap">
+          {entry.data.type && (
+            <span class={`text-xs font-bold px-2.5 py-1 rounded-full border ${
+              entry.data.type === 'url'
+                ? 'border-blue-500/40 text-blue-400 bg-blue-500/10'
+                : 'border-purple-500/40 text-purple-400 bg-purple-500/10'
+            }`}>
+              {entry.data.type === 'url' ? '🔗 큐레이션' : '💡 생각'}
+            </span>
+          )}
+          {entry.data.author && typeof entry.data.author === 'string' && (
+            <span class="text-xs font-bold text-indigo-400">{entry.data.author}</span>
+          )}
           {entry.data.week && <span class="text-xs text-white/30">Week {entry.data.week}</span>}
+          {entry.data.created && (
+            <span class="text-xs text-white/30 ml-auto">{entry.data.created}</span>
+          )}
         </div>
-        <h1 class="text-2xl md:text-3xl font-black text-white mb-4">{entry.data.title}</h1>
+        <h1 class="text-2xl font-black text-white leading-tight mb-4">
+          {entry.data.title ?? entry.id}
+        </h1>
         {entry.data.summary && (
           <p class="text-white/60 leading-relaxed mb-4">{entry.data.summary}</p>
         )}
-        <div class="flex flex-wrap gap-2">
-          {(entry.data.tags ?? []).map((tag: string) => (
-            <span class="text-xs px-2.5 py-0.5 rounded-full bg-white/[0.06] text-white/60 border border-white/10">{tag}</span>
-          ))}
-        </div>
+        {entry.data.tags && entry.data.tags.length > 0 && (
+          <div class="flex flex-wrap gap-2">
+            {entry.data.tags.map((tag: string) => (
+              <span class="text-xs px-2.5 py-1 rounded-full bg-white/[0.06] text-white/60 border border-white/10">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+        {entry.data.source && entry.data.source !== '직접입력' && (
+          <a href={entry.data.source} target="_blank" rel="noopener"
+             class="inline-flex items-center gap-1.5 mt-4 text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
+            ↗ 원문 보기
+          </a>
+        )}
       </div>
 
-      <div class="border-t border-white/10 pt-8 prose">
+      <!-- 본문 -->
+      <article class="wiki-prose">
         <Content />
+      </article>
+
+      <!-- 뒤로 -->
+      <div class="mt-12 pt-8 border-t border-white/10">
+        <a href="/insights" class="text-sm text-white/40 hover:text-white transition-colors">
+          ← 인사이트 목록으로
+        </a>
       </div>
+
     </div>
   </section>
 </Layout>
+
+<style>
+  .wiki-prose {
+    color: rgba(255,255,255,0.75);
+    line-height: 1.85;
+    font-size: 15px;
+  }
+  .wiki-prose :global(h2) {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 2.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .wiki-prose :global(h3) {
+    font-size: 1rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    margin: 1.75rem 0 0.6rem;
+  }
+  .wiki-prose :global(p) { margin-bottom: 1rem; }
+  .wiki-prose :global(ul), .wiki-prose :global(ol) {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .wiki-prose :global(li) { margin-bottom: 0.4rem; }
+  .wiki-prose :global(a) { color: #818cf8; text-underline-offset: 3px; }
+  .wiki-prose :global(strong) { color: #fff; font-weight: 700; }
+  .wiki-prose :global(blockquote) {
+    border-left: 3px solid #6366f1;
+    padding: 0.6rem 1.2rem;
+    margin: 1.5rem 0;
+    color: rgba(255,255,255,0.55);
+    font-style: italic;
+    background: rgba(99,102,241,0.05);
+    border-radius: 0 8px 8px 0;
+  }
+  .wiki-prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 14px;
+  }
+  .wiki-prose :global(th) {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.7);
+    font-weight: 700;
+    padding: 10px 14px;
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: left;
+  }
+  .wiki-prose :global(td) {
+    padding: 10px 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .wiki-prose :global(code) {
+    background: rgba(255,255,255,0.08);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #a5b4fc;
+  }
+  .wiki-prose :global(pre) {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 1.2rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+  }
+  .wiki-prose :global(pre code) {
+    background: none;
+    padding: 0;
+    color: rgba(255,255,255,0.8);
+  }
+</style>

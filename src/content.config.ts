@@ -16,11 +16,19 @@ const missions = defineCollection({
 const insights = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/insights' }),
   schema: z.object({
-    author: z.string(),
+    title: z.string().optional(),
+    author: z.union([z.string(), z.array(z.any()), z.null()]).optional(),
     week: z.number().optional(),
-    title: z.string(),
+    category: z.string().optional(),
     tags: z.array(z.string()).optional().default([]),
+    keywords: z.array(z.string()).optional().default([]),
     summary: z.string().optional(),
+    source: z.string().optional(),
+    created: z.coerce.string().optional(),
+    expires: z.coerce.string().optional(),
+    published: z.coerce.string().optional(),
+    description: z.string().optional(),
+    type: z.enum(['url', 'thought']).optional(),
   }),
 });
 
@@ -48,13 +56,15 @@ const members = defineCollection({
 const gallery = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/gallery' }),
   schema: z.object({
-    maker: z.string(),
-    title: z.string(),
+    title: z.string().optional(),
+    maker: z.string().optional(),
     description: z.string().optional(),
-    link: z.string().url().optional(),
+    link: z.string().optional(),
     tags: z.array(z.string()).optional().default([]),
     week: z.number().optional(),
     thumbnail: z.string().optional(),
+    created: z.coerce.string().optional(),
+    type: z.enum(['vanilla', 'external', 'ppt']).optional().default('vanilla'),
   }),
 });
 

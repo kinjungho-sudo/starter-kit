@@ -3,61 +3,96 @@ import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
 const allGallery = await getCollection('gallery');
-const sorted = allGallery.sort((a, b) => (b.data.week ?? 0) - (a.data.week ?? 0));
+
+const url = Astro.url;
+const filterType = url.searchParams.get('type') ?? '';
+
+const typeLabel: Record<string, string> = {
+  vanilla: '🎨 Vanilla HTML',
+  ppt: '📊 PPT',
+  external: '🔗 외부 링크',
+};
+
+const filtered = allGallery
+  .filter(i => !filterType || i.data.type === filterType)
+  .sort((a, b) => (b.data.created ?? '').localeCompare(a.data.created ?? ''));
+
+const types = [...new Set(allGallery.map(i => i.data.type).filter(Boolean))];
 ---
 
 <Layout title="갤러리">
-  <section class="py-16 px-6">
-    <div class="max-w-4xl mx-auto">
-      <div class="mb-12">
+  <section class="py-12 px-6">
+    <div class="max-w-6xl mx-auto">
+
+      <div class="mb-10">
         <div class="text-xs font-black uppercase tracking-widest text-indigo-400 mb-3">GALLERY</div>
         <h1 class="text-3xl font-black text-white mb-3">결과물 갤러리</h1>
-        <p class="text-white/50">멤버들이 실제로 만들어 배포한 결과물 모음입니다.</p>
+        <p class="text-white/50">Vanilla HTML, PPT, 디자인 결과물 보관소</p>
       </div>
 
-      {sorted.length === 0 ? (
+      <!-- 필터 -->
+      <div class="flex flex-wrap gap-2 mb-8">
+        <a href="/gallery"
+           class={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${!filterType ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-white/20 text-white/60 hover:border-white/40 hover:text-white'}`}>
+          전체 {allGallery.length}
+        </a>
+        {types.map(t => (
+          <a href={`/gallery?type=${encodeURIComponent(t!)}`}
+             class={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${filterType === t ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-white/20 text-white/60 hover:border-white/40 hover:text-white'}`}>
+            {typeLabel[t!] ?? t} {allGallery.filter(i => i.data.type === t).length}
+          </a>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
         <div class="text-center py-20">
           <p class="text-white/30 text-sm mb-2">아직 등록된 결과물이 없습니다.</p>
           <p class="text-white/20 text-xs">
-            <code class="bg-white/10 px-2 py-0.5 rounded">01_gallery/</code> 폴더에 마크다운 파일을 추가하면 자동 반영됩니다.
+            <code class="bg-white/10 px-2 py-0.5 rounded">src/content/gallery/</code> 폴더에 마크다운을 추가하면 자동 반영됩니다.
           </p>
         </div>
       ) : (
-        <div class="grid md:grid-cols-2 gap-5">
-          {sorted.map(project => (
-            <a
-              href={project.data.link ?? '#'}
-              target={project.data.link ? '_blank' : undefined}
-              rel="noopener noreferrer"
-              class="group block bg-white/[0.04] border border-white/10 hover:border-indigo-400/40 rounded-2xl p-6 transition-all"
-            >
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-bold text-indigo-400">
-                  {project.data.maker}{project.data.week ? ` · Week ${project.data.week}` : ''}
-                </span>
-                {project.data.link && (
-                  <span class="text-xs text-white/30 group-hover:text-indigo-400 transition-colors">↗</span>
-                )}
-              </div>
-              <h3 class="font-bold text-white text-base mb-2 group-hover:text-indigo-200 transition-colors">
-                {project.data.title}
-              </h3>
-              {project.data.description && (
-                <p class="text-sm text-white/50 mb-4 leading-relaxed">{project.data.description}</p>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map(item => (
+            <a href={`/gallery/${item.id}`}
+               class="group block bg-white/[0.04] border border-white/10 hover:border-indigo-400/40 rounded-2xl overflow-hidden transition-all">
+              <!-- 썸네일 or 플레이스홀더 -->
+              {item.data.thumbnail ? (
+                <div class="aspect-video overflow-hidden">
+                  <img src={item.data.thumbnail} alt={item.data.title ?? item.id}
+                       class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+                </div>
+              ) : (
+                <div class="aspect-video bg-gradient-to-br from-indigo-900/40 to-purple-900/40 flex items-center justify-center text-4xl">
+                  {item.data.type === 'ppt' ? '📊' : '🎨'}
+                </div>
               )}
-              <div class="flex flex-wrap gap-1.5">
-                {(project.data.tags ?? []).map((tag: string) => (
-                  <span class="text-xs px-2 py-0.5 rounded-full bg-white/[0.06] text-white/60 border border-white/10">{tag}</span>
-                ))}
+              <div class="p-4">
+                <div class="flex items-center gap-2 mb-2">
+                  {item.data.type && (
+                    <span class="text-xs font-bold text-indigo-400">
+                      {typeLabel[item.data.type] ?? item.data.type}
+                    </span>
+                  )}
+                  {item.data.created && (
+                    <span class="text-xs text-white/30 ml-auto">{item.data.created}</span>
+                  )}
+                </div>
+                <h3 class="font-bold text-white text-sm leading-snug group-hover:text-indigo-200 transition-colors">
+                  {item.data.title ?? item.id}
+                </h3>
+                {item.data.description && (
+                  <p class="text-xs text-white/50 mt-1 line-clamp-2">{item.data.description}</p>
+                )}
+                {item.data.maker && (
+                  <p class="text-xs text-white/30 mt-2">by {item.data.maker}</p>
+                )}
               </div>
             </a>
           ))}
         </div>
       )}
 
-      <div class="mt-12 text-center text-white/30 text-sm">
-        결과물은 <code class="text-white/50 bg-white/10 px-2 py-0.5 rounded">01_gallery/</code> 폴더에 등록하면 자동 반영됩니다.
-      </div>
     </div>
   </section>
 </Layout>

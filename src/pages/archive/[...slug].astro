@@ -1,0 +1,46 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const missions = await getCollection('missions');
+  return missions.map(entry => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+---
+<Layout title={entry.data.title ?? entry.slug} activeTab="archive">
+
+  <div slot="sidebar">
+    <div class="sidebar-section">
+      <a href={`/archive?week=${entry.data.week ?? ''}`} class="sidebar-link">
+        ← Week {String(entry.data.week ?? '').padStart(2, '0')} 목록
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <p class="sidebar-label">제출자</p>
+      <p style="padding: 6px 1rem; font-size: 13px; color: var(--text);">{entry.data.member ?? entry.slug}</p>
+    </div>
+    {entry.data.tags && (
+      <div class="sidebar-section">
+        <p class="sidebar-label">태그</p>
+        {entry.data.tags.map((tag: string) => (
+          <p style="padding: 4px 1rem; font-size: 12px; color: var(--muted);">{tag}</p>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <div class="page-header">
+    <p class="card-label">Week {entry.data.week} · {entry.data.member}</p>
+    <h1>{entry.data.title ?? entry.slug}</h1>
+  </div>
+  <article style="line-height: 1.8; font-size: 15px; color: rgba(255,255,255,0.82); max-width: 680px;">
+    <Content />
+  </article>
+
+</Layout>
