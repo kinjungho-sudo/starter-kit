@@ -3,42 +3,59 @@ import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
 const all = await getCollection('analysis');
-const sorted = [...all].sort((a,b) => (b.data.week ?? 0) - (a.data.week ?? 0));
+const sorted = [...all].sort((a, b) =>
+  (b.data.finished ?? '').localeCompare(a.data.finished ?? '')
+);
+
+const tags = [...new Set(sorted.flatMap(b => b.data.tags ?? []))].sort();
+const filterTag = Astro.url.searchParams.get('tag') ?? '';
+const filtered = filterTag ? sorted.filter(b => b.data.tags?.includes(filterTag)) : sorted;
 ---
 
-<Layout title="분석">
+<Layout title="독서 노트" activeTab="analysis">
 
   <div slot="sidebar">
-    <p class="sb-label">리포트</p>
-    {sorted.map(r => (
-      <a href={`/analysis/${r.id}`} class="sb-item">
-        <span class="sb-dot"></span>
-        Week {String(r.data.week ?? '').padStart(2,'0')}
-        <span class="count">{r.data.total_submissions ?? 0}명</span>
-      </a>
-    ))}
-    {sorted.length === 0 && <p style="padding:4px 12px; font-size:11px; color:var(--muted2)">아직 없음</p>}
+    <p class="sb-label">전체</p>
+    <a href="/analysis" class={`sb-item${!filterTag ? ' active' : ''}`}>
+      모든 책
+      <span class="count">{sorted.length}</span>
+    </a>
+
+    {tags.length > 0 && (
+      <>
+        <hr class="sb-divider" />
+        <p class="sb-label">태그</p>
+        {tags.map(t => (
+          <a href={`/analysis?tag=${encodeURIComponent(t)}`} class={`sb-item${filterTag === t ? ' active' : ''}`}>
+            {t}
+            <span class="count">{sorted.filter(b => b.data.tags?.includes(t)).length}</span>
+          </a>
+        ))}
+      </>
+    )}
   </div>
 
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
     <div>
-      <h1 class="page-title">분석 리포트</h1>
-      <p class="page-meta">AI 주간 분석 {sorted.length}건</p>
+      <h1 class="page-title">독서 노트</h1>
+      <p class="page-meta">{filtered.length}권</p>
     </div>
   </div>
 
-  {sorted.length === 0 ? (
-    <div style="padding:64px 0; text-align:center; color:var(--muted2); font-size:13px;">
-      <code style="color:var(--accent); opacity:0.6;">/analyze N</code> 을 실행하면 자동 생성됩니다.
-    </div>
+  {filtered.length === 0 ? (
+    <div style="padding:64px 0; text-align:center; color:var(--muted2); font-size:13px;">아직 등록된 독서 노트가 없습니다.</div>
   ) : (
-    <div style="display:flex; flex-direction:column; gap:2px;">
-      {sorted.map(r => (
-        <a href={`/analysis/${r.id}`} class="row">
-          <span class="badge badge-indigo">W{String(r.data.week ?? '').padStart(2,'0')}</span>
-          <span style="font-size:12px; color:var(--text); flex:1;">Week {r.data.week} 분석 리포트</span>
-          <span style="font-size:11px; color:var(--muted2);">{r.data.total_submissions ?? 0}명 · {r.data.date ?? ''}</span>
-          <span style="font-size:11px; color:var(--accent);">→</span>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px;">
+      {filtered.map(book => (
+        <a href={`/analysis/${book.id}`} class="card">
+          {book.data.tags && book.data.tags.length > 0 && (
+            <p class="card-label">{book.data.tags[0]}</p>
+          )}
+          <p class="card-title">{book.data.title}</p>
+          <p class="card-meta">{book.data.author}</p>
+          {book.data.finished && (
+            <p style="font-size:10px; color:var(--muted2); margin-top:8px;">완독 {book.data.finished}</p>
+          )}
         </a>
       ))}
     </div>

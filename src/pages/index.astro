@@ -89,16 +89,19 @@ const totalSubmissions = allMissions.length;
     </div>
   )}
 
-  <!-- 최신 분석 -->
+  <!-- 최신 독서 노트 -->
   {latestAnalysis && (
     <>
-      <p class="section-label" style="margin-top:8px;">최신 분석</p>
+      <p class="section-label" style="margin-top:8px;">최근 독서</p>
       <a href={`/analysis/${latestAnalysis.id}`} class="row" style="border-radius:6px; border:1px solid var(--border);">
-        <span class="badge badge-indigo">W{String(latestAnalysis.data.week ?? '').padStart(2,'0')}</span>
-        <span style="font-size:12px; color:var(--text);">
-          {latestAnalysis.data.total_submissions != null ? `${latestAnalysis.data.total_submissions}명 제출` : ''}
-          {latestAnalysis.data.date ? ` · ${latestAnalysis.data.date}` : ''}
+        <span class="badge badge-indigo">독서</span>
+        <span style="font-size:12px; color:var(--text); flex:1;">
+          {latestAnalysis.data.title ?? ''}
+          {latestAnalysis.data.author ? ` · ${latestAnalysis.data.author}` : ''}
         </span>
+        {latestAnalysis.data.finished && (
+          <span style="font-size:11px; color:var(--muted2);">{latestAnalysis.data.finished}</span>
+        )}
         <span style="margin-left:auto; font-size:11px; color:var(--accent);">→</span>
       </a>
     </>

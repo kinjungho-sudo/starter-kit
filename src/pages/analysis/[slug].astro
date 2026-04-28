@@ -3,8 +3,8 @@ import Layout from '../../layouts/Layout.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
-  const reports = await getCollection('analysis');
-  return reports.map(entry => ({
+  const books = await getCollection('analysis');
+  return books.map(entry => ({
     params: { slug: entry.id },
     props: { entry },
   }));
@@ -14,24 +14,58 @@ const { entry } = Astro.props;
 const { Content } = await render(entry);
 ---
 
-<Layout title={`Week ${entry.data.week} 분석`}>
-  <section class="py-16 px-6">
-    <div class="max-w-3xl mx-auto">
-      <a href="/analysis" class="text-xs text-white/40 hover:text-white/70 transition-colors mb-6 inline-block">← 분석 목록</a>
+<Layout title={entry.data.title} activeTab="analysis">
 
-      <div class="flex items-center gap-3 mb-6">
-        <span class="text-xs font-black uppercase tracking-widest text-indigo-400 border border-indigo-400/30 rounded-full px-3 py-1">
-          WEEK {entry.data.week}
-        </span>
-        <span class="text-xs text-white/30">
-          {entry.data.date}
-          {entry.data.total_submissions && ` · ${entry.data.total_submissions}건 제출`}
-        </span>
-      </div>
-
-      <div class="prose">
-        <Content />
-      </div>
+  <div slot="sidebar">
+    <div class="sidebar-section">
+      <a href="/analysis" class="sidebar-link">← 독서 노트 목록</a>
     </div>
-  </section>
+    <div class="sidebar-section">
+      <p class="sidebar-label">책 정보</p>
+      <p style="padding:4px 1rem; font-size:12px; color:var(--text); font-weight:600;">{entry.data.title}</p>
+      <p style="padding:4px 1rem; font-size:12px; color:var(--muted);">{entry.data.author}</p>
+      {entry.data.finished && (
+        <p style="padding:4px 1rem; font-size:12px; color:var(--muted);">완독 {entry.data.finished}</p>
+      )}
+    </div>
+    {entry.data.tags && entry.data.tags.length > 0 && (
+      <div class="sidebar-section">
+        <p class="sidebar-label">태그</p>
+        {entry.data.tags.map((t: string) => (
+          <p style="padding:4px 1rem; font-size:12px; color:var(--muted);">{t}</p>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <div class="page-header">
+    <p class="card-label">독서 노트</p>
+    <h1>{entry.data.title}</h1>
+  </div>
+
+  <div style="display:grid; gap:8px; margin-bottom:28px; max-width:680px;">
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <div style="padding:12px 16px; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px; min-width:120px;">
+        <p style="font-size:10px; font-weight:800; letter-spacing:0.08em; color:var(--muted); text-transform:uppercase; margin-bottom:4px;">작가</p>
+        <p style="font-size:13px; color:var(--text);">{entry.data.author}</p>
+      </div>
+      {entry.data.finished && (
+        <div style="padding:12px 16px; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px; min-width:120px;">
+          <p style="font-size:10px; font-weight:800; letter-spacing:0.08em; color:var(--muted); text-transform:uppercase; margin-bottom:4px;">완독</p>
+          <p style="font-size:13px; color:var(--text);">{entry.data.finished}</p>
+        </div>
+      )}
+    </div>
+    {entry.data.summary && (
+      <div style="padding:14px 16px; background:rgba(129,140,248,0.06); border:1px solid rgba(129,140,248,0.2); border-radius:10px; max-width:680px;">
+        <p style="font-size:10px; font-weight:800; letter-spacing:0.08em; color:#818cf8; text-transform:uppercase; margin-bottom:6px;">한줄 요약</p>
+        <p style="font-size:13px; line-height:1.7; color:rgba(255,255,255,0.75);">{entry.data.summary}</p>
+      </div>
+    )}
+  </div>
+
+  <article style="line-height:1.8; font-size:15px; color:rgba(255,255,255,0.82); max-width:680px;">
+    <Content />
+  </article>
+
 </Layout>

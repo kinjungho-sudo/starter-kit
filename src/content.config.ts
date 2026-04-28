@@ -35,10 +35,11 @@ const insights = defineCollection({
 const analysis = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/analysis' }),
   schema: z.object({
-    week: z.number(),
-    date: z.coerce.string(),
+    title: z.string(),
+    author: z.string(),
+    finished: z.coerce.string().optional(),
+    summary: z.string().optional(),
     tags: z.array(z.string()).optional().default([]),
-    total_submissions: z.number().optional(),
   }),
 });
 
