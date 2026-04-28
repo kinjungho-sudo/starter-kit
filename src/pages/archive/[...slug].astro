@@ -1,19 +1,19 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
   const missions = await getCollection('missions');
   return missions.map(entry => ({
-    params: { slug: entry.slug },
+    params: { slug: entry.id },
     props: { entry },
   }));
 }
 
 const { entry } = Astro.props;
-const { Content } = await entry.render();
+const { Content } = await render(entry);
 ---
-<Layout title={entry.data.title ?? entry.slug} activeTab="archive">
+<Layout title={entry.data.title ?? entry.id} activeTab="archive">
 
   <div slot="sidebar">
     <div class="sidebar-section">
@@ -23,7 +23,7 @@ const { Content } = await entry.render();
     </div>
     <div class="sidebar-section">
       <p class="sidebar-label">제출자</p>
-      <p style="padding: 6px 1rem; font-size: 13px; color: var(--text);">{entry.data.member ?? entry.slug}</p>
+      <p style="padding: 6px 1rem; font-size: 13px; color: var(--text);">{entry.data.member ?? entry.id}</p>
     </div>
     {entry.data.tags && (
       <div class="sidebar-section">
@@ -37,7 +37,7 @@ const { Content } = await entry.render();
 
   <div class="page-header">
     <p class="card-label">Week {entry.data.week} · {entry.data.member}</p>
-    <h1>{entry.data.title ?? entry.slug}</h1>
+    <h1>{entry.data.title ?? entry.id}</h1>
   </div>
   <article style="line-height: 1.8; font-size: 15px; color: rgba(255,255,255,0.82); max-width: 680px;">
     <Content />
