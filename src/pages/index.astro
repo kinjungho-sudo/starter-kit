@@ -73,9 +73,9 @@ const totalSubmissions = allMissions.length;
         <a href={`/archive/${m.id}`} class="card">
           <p class="card-label">{m.data.member ?? m.id}</p>
           <p class="card-title">{m.data.title ?? m.id}</p>
-          {m.data.tags && (
+          {m.data.stack && m.data.stack.length > 0 && (
             <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:8px;">
-              {(m.data.tags as string[]).slice(0,3).map(t => (
+              {(m.data.stack as string[]).slice(0,3).map(t => (
                 <span class="badge badge-indigo">{t}</span>
               ))}
             </div>

@@ -36,7 +36,7 @@ const analysis = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/analysis' }),
   schema: z.object({
     week: z.number(),
-    date: z.string(),
+    date: z.coerce.string(),
     tags: z.array(z.string()).optional().default([]),
     total_submissions: z.number().optional(),
   }),
@@ -48,8 +48,8 @@ const members = defineCollection({
     nickname: z.string(),
     github: z.string(),
     role: z.string(),
-    joined: z.string(),
-    last_updated: z.string().optional(),
+    joined: z.coerce.string(),
+    last_updated: z.coerce.string().optional(),
   }),
 });
 

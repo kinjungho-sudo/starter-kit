@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 
 let all: any[] = [];
-try { all = await getCollection('insights'); } catch { all = await getCollection('skills'); }
+try { all = await getCollection('insights'); } catch { all = []; }
 
 const categories = [...new Set(all.map((s:any) => s.data.category).filter(Boolean))].sort();
 const filterCat = Astro.url.searchParams.get('cat') ?? '';
