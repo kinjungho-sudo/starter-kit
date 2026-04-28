@@ -9,28 +9,28 @@ const sorted = [...all].sort((a, b) =>
   (b.data.created ?? '').localeCompare(a.data.created ?? '')
 );
 
-const authors = [...new Set(sorted.map((q: any) => q.data.author).filter(Boolean))].sort();
-const filterAuthor = Astro.url.searchParams.get('author') ?? '';
-const filtered = filterAuthor ? sorted.filter((q: any) => q.data.author === filterAuthor) : sorted;
+const books = [...new Set(sorted.map((q: any) => q.data.book).filter(Boolean))].sort();
+const filterBook = Astro.url.searchParams.get('book') ?? '';
+const filtered = filterBook ? sorted.filter((q: any) => q.data.book === filterBook) : sorted;
 ---
 
 <Layout title="좋은 글" activeTab="quotes">
 
   <div slot="sidebar">
     <p class="sb-label">전체</p>
-    <a href="/quotes" class={`sb-item${!filterAuthor ? ' active' : ''}`}>
+    <a href="/quotes" class={`sb-item${!filterBook ? ' active' : ''}`}>
       모든 글귀
       <span class="count">{sorted.length}</span>
     </a>
 
-    {authors.length > 0 && (
+    {books.length > 0 && (
       <>
         <hr class="sb-divider" />
-        <p class="sb-label">작가</p>
-        {authors.map((author: string) => (
-          <a href={`/quotes?author=${encodeURIComponent(author)}`} class={`sb-item${filterAuthor === author ? ' active' : ''}`}>
-            {author}
-            <span class="count">{sorted.filter((q: any) => q.data.author === author).length}</span>
+        <p class="sb-label">출처</p>
+        {books.map((book: string) => (
+          <a href={`/quotes?book=${encodeURIComponent(book)}`} class={`sb-item${filterBook === book ? ' active' : ''}`}>
+            {book}
+            <span class="count">{sorted.filter((q: any) => q.data.book === book).length}</span>
           </a>
         ))}
       </>
