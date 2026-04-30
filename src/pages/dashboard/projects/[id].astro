@@ -1,0 +1,13 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import DashboardPage from '../../../components/dashboard/DashboardPage.astro';
+import { getProjects } from '../../../lib/dashboard/loadData';
+
+export async function getStaticPaths() {
+  return getProjects().map((p) => ({ params: { id: p.id } }));
+}
+---
+
+<Layout title="대시보드" description="코마인드웍스 자비스 중심 에이전트·프로젝트 대시보드">
+  <DashboardPage />
+</Layout>

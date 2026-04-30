@@ -1,0 +1,280 @@
+---
+import {
+  getProjects,
+  getAgents,
+  getCategories,
+  calculateMetrics,
+} from '../../lib/dashboard/loadData';
+
+const projects = getProjects();
+const agents = getAgents();
+const categories = getCategories();
+const metrics = calculateMetrics();
+
+const allItemsJson = JSON.stringify({ projects, agents, categories });
+
+const statusOrder = ['계획', '진행중', '검토중', '완성'];
+---
+
+<section class="max-w-7xl mx-auto px-6 py-10">
+  <header class="mb-8">
+    <div class="text-xs font-black tracking-widest uppercase text-indigo-400 mb-3">
+      ComindWorks · Jarvis Console
+    </div>
+    <h1 class="text-3xl md:text-5xl font-black tracking-tight text-white leading-tight">
+      자비스 중심 <span class="text-indigo-400">에이전트 대시보드</span>
+    </h1>
+    <p class="text-white/50 mt-3 text-sm md:text-base">
+      만드는 모든 것을 한 곳에서. 프로젝트 · 에이전트 · 진척을 한눈에 봅니다.
+    </p>
+  </header>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
+    <div class="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
+      <div class="text-[11px] font-bold tracking-widest text-white/40 uppercase">전체</div>
+      <div class="text-2xl font-black text-white mt-1">{metrics.total}</div>
+    </div>
+    <div class="rounded-2xl border border-emerald-400/20 bg-emerald-400/[0.05] px-5 py-4">
+      <div class="text-[11px] font-bold tracking-widest text-emerald-300/80 uppercase">완성</div>
+      <div class="text-2xl font-black text-emerald-300 mt-1">{metrics.completed}</div>
+    </div>
+    <div class="rounded-2xl border border-indigo-400/20 bg-indigo-400/[0.05] px-5 py-4">
+      <div class="text-[11px] font-bold tracking-widest text-indigo-300/80 uppercase">진행중</div>
+      <div class="text-2xl font-black text-indigo-300 mt-1">{metrics.inProgress}</div>
+    </div>
+    <div class="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
+      <div class="text-[11px] font-bold tracking-widest text-white/40 uppercase">계획</div>
+      <div class="text-2xl font-black text-white/80 mt-1">{metrics.planned}</div>
+    </div>
+    <div class="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 col-span-2 md:col-span-1">
+      <div class="text-[11px] font-bold tracking-widest text-white/40 uppercase">완성률</div>
+      <div class="text-2xl font-black text-white mt-1">{metrics.overallProgress}%</div>
+      <div class="mt-2 h-1 bg-white/10 rounded-full overflow-hidden">
+        <div class="h-full bg-indigo-400" style={`width:${metrics.overallProgress}%`}></div>
+      </div>
+    </div>
+    <div class="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
+      <div class="text-[11px] font-bold tracking-widest text-white/40 uppercase">이번 주 완성</div>
+      <div class="text-2xl font-black text-white mt-1">{metrics.completedThisWeek}</div>
+    </div>
+    <div class="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
+      <div class="text-[11px] font-bold tracking-widest text-white/40 uppercase">이번 달 추가</div>
+      <div class="text-2xl font-black text-white mt-1">{metrics.addedThisMonth}</div>
+    </div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+    <div class="flex flex-wrap items-center gap-2">
+      <button data-view-tab="constellation" class="view-tab h-9 px-4 rounded-full text-sm font-bold border border-white/15 hover:border-white/30 text-white/70 transition">✦ 자비스 연결도</button>
+      <button data-view-tab="kanban" class="view-tab h-9 px-4 rounded-full text-sm font-bold border border-white/15 hover:border-white/30 text-white/70 transition">▦ 칸반</button>
+      <button data-view-tab="grid" class="view-tab h-9 px-4 rounded-full text-sm font-bold border border-white/15 hover:border-white/30 text-white/70 transition">⊞ 카테고리 그리드</button>
+      <button data-view-tab="timeline" class="view-tab h-9 px-4 rounded-full text-sm font-bold border border-white/15 hover:border-white/30 text-white/70 transition">⏱ 타임라인</button>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <select id="filter-category" class="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/15 text-sm text-white/80">
+        <option value="">전체 카테고리</option>
+        {categories.map(c => <option value={c.id}>{c.name}</option>)}
+      </select>
+      <select id="filter-status" class="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/15 text-sm text-white/80">
+        <option value="">전체 상태</option>
+        <option value="완성">완성</option>
+        <option value="진행중">진행중</option>
+        <option value="계획">계획</option>
+      </select>
+      <select id="filter-type" class="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/15 text-sm text-white/80">
+        <option value="">프로젝트+에이전트</option>
+        <option value="project">프로젝트만</option>
+        <option value="agent">에이전트만</option>
+      </select>
+      <select id="sort-by" class="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/15 text-sm text-white/80">
+        <option value="category">카테고리순</option>
+        <option value="progress-desc">진행률↓</option>
+        <option value="progress-asc">진행률↑</option>
+        <option value="updated">최근 업데이트</option>
+        <option value="deadline">마감 임박</option>
+        <option value="alpha">알파벳</option>
+      </select>
+    </div>
+  </div>
+
+  <div data-view="constellation" class="dashboard-view">
+    <div class="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent p-6 md:p-10 overflow-x-auto">
+      <div class="flex flex-col items-center mb-8">
+        <div class="px-6 py-3 rounded-2xl border border-white/15 bg-white/[0.04] text-white/80 text-sm font-bold">정호 (지휘부)</div>
+        <div class="w-px h-6 bg-white/20"></div>
+        <div class="text-[10px] font-black tracking-widest text-white/30 uppercase mb-1">명령</div>
+        <div class="relative">
+          <div class="px-8 py-5 rounded-3xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-black tracking-tight text-xl shadow-2xl shadow-indigo-500/30">✦ JARVIS</div>
+          <div class="absolute inset-0 rounded-3xl ring-2 ring-indigo-400/40 animate-pulse pointer-events-none"></div>
+        </div>
+        <div class="w-px h-6 bg-white/20"></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
+        {categories.map(cat => {
+          const catItems = [
+            ...projects.filter(p => p.category === cat.id).map(p => ({ ...p, __type: 'project' as const })),
+            ...agents.filter(a => a.category === cat.id).map(a => ({ ...a, __type: 'agent' as const })),
+          ];
+          const completed = catItems.filter(i => i.status === '완성').length;
+          return (
+            <div class="constellation-cluster" data-category={cat.id}>
+              <button
+                class="w-full text-left rounded-2xl px-4 py-3 border border-white/10 mb-3 hover:border-white/30 transition"
+                style={`background: linear-gradient(135deg, ${cat.color}30, transparent);`}
+                data-filter-category={cat.id}
+              >
+                <div class="text-[10px] font-black tracking-widest uppercase mb-1" style={`color:${cat.accent}`}>{cat.purpose}</div>
+                <div class="flex items-baseline justify-between">
+                  <div class="font-black text-white">{cat.name}</div>
+                  <div class="text-xs font-bold text-white/40">{completed} / {catItems.length}</div>
+                </div>
+              </button>
+              <div class="space-y-2">
+                {catItems.map(item => (
+                  <button
+                    class="w-full text-left rounded-xl px-3 py-2.5 border transition group"
+                    data-item-type={item.__type}
+                    data-item-id={item.id}
+                    data-status={item.status}
+                    data-category={item.category}
+                    style={
+                      item.status === '완성'
+                        ? `background:${cat.color}; border-color:${cat.accent}; color:white;`
+                        : item.status === '진행중'
+                        ? `background:${cat.color}30; border-color:${cat.accent}80; border-style:dashed; color:white;`
+                        : `background:transparent; border-color:rgba(255,255,255,0.08); color:rgba(255,255,255,0.45);`
+                    }
+                  >
+                    <div class="flex items-center gap-2">
+                      {item.__type === 'project' && (
+                        <span class="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded bg-white/15 text-white/80">PROJ</span>
+                      )}
+                      <span class="text-sm font-bold truncate flex-1">{item.name}</span>
+                      <span class="text-[10px] font-black opacity-70">
+                        {item.status === '완성' ? '✓' : item.status === '진행중' ? `${item.progress}%` : '·'}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+                {catItems.length === 0 && <div class="text-xs text-white/30 px-3 py-2">아직 없음</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+
+  <div data-view="kanban" class="dashboard-view hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      {statusOrder.map(status => {
+        const items = [
+          ...projects.filter(p => p.status === status).map(p => ({ ...p, __type: 'project' as const })),
+          ...agents.filter(a => a.status === status).map(a => ({ ...a, __type: 'agent' as const })),
+        ];
+        return (
+          <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div class="font-black text-white">{status}</div>
+              <div class="text-xs font-bold text-white/40">{items.length}</div>
+            </div>
+            <div class="space-y-2 kanban-column" data-status={status}>
+              {items.map(item => {
+                const cat = categories.find(c => c.id === item.category)!;
+                return (
+                  <button
+                    class="w-full text-left rounded-xl border border-white/10 bg-white/[0.04] hover:border-white/30 px-3 py-3 transition"
+                    data-item-type={item.__type}
+                    data-item-id={item.id}
+                    data-category={item.category}
+                    data-status={item.status}
+                  >
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span class="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded" style={`background:${cat.color}40; color:${cat.accent}`}>{cat.name}</span>
+                      {item.__type === 'project' && <span class="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded bg-white/15 text-white/70">PROJ</span>}
+                    </div>
+                    <div class="text-sm font-bold text-white mb-1.5">{item.name}</div>
+                    <div class="h-1 bg-white/10 rounded-full overflow-hidden">
+                      <div class="h-full bg-indigo-400" style={`width:${item.progress}%`}></div>
+                    </div>
+                    {item.__type === 'project' && (item as any).deadline && (
+                      <div class="text-[10px] font-bold text-white/50 mt-1.5">📅 {(item as any).deadline}</div>
+                    )}
+                  </button>
+                );
+              })}
+              {items.length === 0 && <div class="text-xs text-white/30 text-center py-6">없음</div>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+
+  <div data-view="grid" class="dashboard-view hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {categories.map(cat => {
+        const catItems = [
+          ...projects.filter(p => p.category === cat.id).map(p => ({ ...p, __type: 'project' as const })),
+          ...agents.filter(a => a.category === cat.id).map(a => ({ ...a, __type: 'agent' as const })),
+        ];
+        return (
+          <div class="rounded-2xl p-6 border" style={`background: linear-gradient(135deg, ${cat.color}15, transparent); border-color:${cat.color}55;`}>
+            <div class="flex items-baseline justify-between mb-4">
+              <div>
+                <div class="text-[10px] font-black tracking-widest uppercase" style={`color:${cat.accent}`}>{cat.purpose}</div>
+                <div class="text-xl font-black text-white">{cat.name}</div>
+                <div class="text-xs text-white/50 mt-0.5">{cat.description}</div>
+              </div>
+            </div>
+            <div class="space-y-1.5 grid-list">
+              {catItems.map(item => (
+                <button
+                  class="w-full text-left flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 hover:bg-white/[0.04] transition group"
+                  data-item-type={item.__type}
+                  data-item-id={item.id}
+                  data-category={item.category}
+                  data-status={item.status}
+                >
+                  <div class="flex items-center gap-2 min-w-0 flex-1">
+                    <span class="w-1.5 h-1.5 rounded-full" style={`background:${
+                      item.status === '완성' ? cat.accent : item.status === '진행중' ? cat.accent + '80' : 'rgba(255,255,255,0.2)'
+                    }`}></span>
+                    {item.__type === 'project' && <span class="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded bg-white/10 text-white/60 shrink-0">PROJ</span>}
+                    <span class="text-sm font-bold text-white/90 truncate group-hover:text-white">{item.name}</span>
+                  </div>
+                  <span class="text-[10px] font-black tracking-wide px-2 py-0.5 rounded shrink-0" style={`background:${
+                    item.status === '완성' ? cat.color : item.status === '진행중' ? cat.color + '40' : 'rgba(255,255,255,0.06)'
+                  }; color:${
+                    item.status === '완성' ? '#fff' : item.status === '진행중' ? cat.accent : 'rgba(255,255,255,0.4)'
+                  }`}>
+                    {item.status === '완성' ? '완성' : item.status === '진행중' ? `${item.progress}%` : '계획'}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+
+  <div data-view="timeline" class="dashboard-view hidden">
+    <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+      <div id="timeline-list" class="space-y-6"></div>
+    </div>
+  </div>
+</section>
+
+<div id="detail-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-sm modal-backdrop"></div>
+  <div class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/15 bg-[#0a0a0a] shadow-2xl">
+    <button id="modal-close" class="absolute top-4 right-4 w-9 h-9 rounded-full border border-white/15 hover:border-white/40 text-white/60 hover:text-white flex items-center justify-center transition z-10" aria-label="닫기">✕</button>
+    <div id="modal-body" class="p-6 md:p-8"></div>
+  </div>
+</div>
+
+<script type="application/json" id="dashboard-data" set:html={allItemsJson}></script>
+<script src="/scripts/dashboard.js" is:inline></script>

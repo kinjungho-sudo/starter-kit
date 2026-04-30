@@ -1,0 +1,36 @@
+{
+  "categories": [
+    {
+      "id": "일상자동화",
+      "name": "일상 자동화",
+      "color": "#185FA5",
+      "accent": "#3B82F6",
+      "description": "매일·매주 반복되는 내 업무를 줄이는 것",
+      "purpose": "시간 확보"
+    },
+    {
+      "id": "콘텐츠엔진",
+      "name": "콘텐츠 / 마케팅 엔진",
+      "color": "#0F6E56",
+      "accent": "#14B8A6",
+      "description": "코마인드웍스 인지도와 채널 성장",
+      "purpose": "잠재 고객 유입"
+    },
+    {
+      "id": "수익화후보",
+      "name": "수익화 후보",
+      "color": "#993C1D",
+      "accent": "#F97316",
+      "description": "제3자에게 팔 수 있는 제품·서비스",
+      "purpose": "매출"
+    },
+    {
+      "id": "학습자산화",
+      "name": "학습 / 자산화",
+      "color": "#854F0B",
+      "accent": "#F59E0B",
+      "description": "만드는 과정 자체가 매뉴얼·콘텐츠가 됨",
+      "purpose": "자산 누적"
+    }
+  ]
+}
