@@ -306,6 +306,17 @@
   }
   bindItemClicks();
 
+  // JARVIS 클릭 → 전체 필터 초기화
+  const jarvisNode = document.getElementById('jarvis-node');
+  if (jarvisNode) {
+    jarvisNode.addEventListener('click', () => {
+      document.getElementById('filter-category').value = '';
+      document.getElementById('filter-status').value = '';
+      document.getElementById('filter-type').value = '';
+      applyFilters();
+    });
+  }
+
   // URL 직접 진입
   const path = location.pathname;
   const agentMatch = path.match(/^\/dashboard\/agents\/(.+)$/);

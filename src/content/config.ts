@@ -22,6 +22,9 @@ const gallery = defineCollection({
     created: z.coerce.string().optional(),
     description: z.string().optional(),
     type: z.enum(['vanilla', 'external', 'ppt']).optional().default('vanilla'),
+    agents: z.array(z.string()).optional(),
+    skills: z.array(z.string()).optional(),
+    features: z.array(z.string()).optional(),
   }),
 });
 

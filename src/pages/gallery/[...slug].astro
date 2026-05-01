@@ -68,6 +68,41 @@ const isEmbed = entry.data.type === 'vanilla' || entry.data.type === 'ppt';
             ))}
           </div>
         )}
+
+        {(entry.data.agents?.length || entry.data.skills?.length || entry.data.features?.length) && (
+          <div class="mt-6 p-4 rounded-2xl border border-white/10 bg-white/[0.02] space-y-3">
+            {entry.data.agents?.length && (
+              <div>
+                <div class="text-[10px] font-black tracking-widest uppercase text-emerald-400 mb-2">AI 에이전트</div>
+                <div class="flex flex-wrap gap-2">
+                  {entry.data.agents.map((a: string) => (
+                    <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/25">{a}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {entry.data.skills?.length && (
+              <div>
+                <div class="text-[10px] font-black tracking-widest uppercase text-amber-400 mb-2">Skills</div>
+                <div class="flex flex-wrap gap-2">
+                  {entry.data.skills.map((s: string) => (
+                    <span class="text-xs px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/25">{s}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {entry.data.features?.length && (
+              <div>
+                <div class="text-[10px] font-black tracking-widest uppercase text-indigo-400 mb-2">사용 기능</div>
+                <div class="flex flex-wrap gap-2">
+                  {entry.data.features.map((f: string) => (
+                    <span class="text-xs px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/25">{f}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <!-- 임베드 or 외부 링크 -->
