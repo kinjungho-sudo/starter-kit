@@ -9,156 +9,336 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const { Content } = await render(entry);
+const d = entry.data;
 
 const typeLabel: Record<string, string> = {
-  vanilla: '🎨 Vanilla HTML',
-  ppt: '📊 PPT',
-  external: '🔗 외부 링크',
+  vanilla: 'Vanilla HTML',
+  ppt: 'PPT',
+  external: '외부 링크',
 };
 
-const isEmbed = entry.data.type === 'vanilla' || entry.data.type === 'ppt';
+const isEmbed = d.type === 'vanilla' || d.type === 'ppt';
+const hasSpec = d.spec_summary || d.spec_stack?.length || d.spec_how?.length || d.spec_steps?.length || d.spec_notes?.length;
 ---
 
-<Layout title={entry.data.title ?? entry.id}>
-  <section class="py-12 px-6">
-    <div class="max-w-5xl mx-auto">
+<Layout title={d.title ?? entry.id}>
 
-      <!-- 브레드크럼 -->
-      <div class="flex items-center gap-2 mb-8 text-sm text-white/40">
-        <a href="/gallery" class="hover:text-white transition-colors">갤러리</a>
-        {entry.data.type && (
-          <>
-            <span>·</span>
-            <span>{typeLabel[entry.data.type] ?? entry.data.type}</span>
-          </>
+  <!-- 브레드크럼 -->
+  <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:rgba(255,255,255,0.3); margin-bottom:20px;">
+    <a href="/gallery" style="color:rgba(255,255,255,0.3); text-decoration:none; hover:color:white;">갤러리</a>
+    <span>›</span>
+    <span style="color:rgba(255,255,255,0.6);">{d.title ?? entry.id}</span>
+  </div>
+
+  <div class="gallery-detail">
+
+    <!-- 좌: 미리보기 + 기본 정보 -->
+    <div class="gallery-left">
+
+      <!-- 미리보기 -->
+      <div class="preview-wrap">
+        {(isEmbed || d.type === 'external') && d.link ? (
+          <iframe
+            src={d.link}
+            title={d.title ?? entry.id}
+            loading="lazy"
+            sandbox="allow-scripts allow-same-origin allow-forms"
+            scrolling="no"
+          ></iframe>
+        ) : (
+          <div class="preview-empty">{d.title?.[0] ?? '?'}</div>
         )}
+        <div class="preview-shade"></div>
       </div>
+
+      {d.link && (
+        <a href={d.link} target="_blank" rel="noopener" class="open-btn">
+          ↗ 결과물 열기
+        </a>
+      )}
+
+      <!-- 태그 -->
+      {d.tags && d.tags.length > 0 && (
+        <div class="tag-row">
+          {d.tags.map((t: string) => (
+            <span class="tag">{t}</span>
+          ))}
+        </div>
+      )}
+    </div>
+
+    <!-- 우: 상세 정보 -->
+    <div class="gallery-right">
 
       <!-- 헤더 -->
-      <div class="mb-8">
-        <div class="flex items-center gap-3 mb-3 flex-wrap">
-          {entry.data.type && (
-            <span class="text-xs font-bold px-2.5 py-1 rounded-full border border-indigo-500/40 text-indigo-400 bg-indigo-500/10">
-              {typeLabel[entry.data.type] ?? entry.data.type}
-            </span>
-          )}
-          {entry.data.created && (
-            <span class="text-xs text-white/30">{entry.data.created}</span>
-          )}
-          {entry.data.link && (
-            <a href={entry.data.link} target="_blank" rel="noopener"
-               class="ml-auto text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
-              ↗ 새 탭에서 열기
-            </a>
-          )}
+      <div class="detail-header">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+          {d.type && <span class="type-badge">{typeLabel[d.type] ?? d.type}</span>}
+          {d.created && <span style="font-size:11px; color:rgba(255,255,255,0.3);">{d.created}</span>}
         </div>
-        <h1 class="text-2xl font-black text-white mb-2">{entry.data.title ?? entry.id}</h1>
-        {entry.data.description && (
-          <p class="text-white/60 text-sm">{entry.data.description}</p>
-        )}
-        {entry.data.maker && (
-          <p class="text-white/40 text-xs mt-2">by {entry.data.maker}</p>
-        )}
-        {entry.data.tags && entry.data.tags.length > 0 && (
-          <div class="flex flex-wrap gap-2 mt-4">
-            {entry.data.tags.map((tag: string) => (
-              <span class="text-xs px-2.5 py-1 rounded-full bg-white/[0.06] text-white/60 border border-white/10">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {(entry.data.agents?.length || entry.data.skills?.length || entry.data.features?.length) && (
-          <div class="mt-6 p-4 rounded-2xl border border-white/10 bg-white/[0.02] space-y-3">
-            {entry.data.agents?.length && (
-              <div>
-                <div class="text-[10px] font-black tracking-widest uppercase text-emerald-400 mb-2">AI 에이전트</div>
-                <div class="flex flex-wrap gap-2">
-                  {entry.data.agents.map((a: string) => (
-                    <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/25">{a}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {entry.data.skills?.length && (
-              <div>
-                <div class="text-[10px] font-black tracking-widest uppercase text-amber-400 mb-2">Skills</div>
-                <div class="flex flex-wrap gap-2">
-                  {entry.data.skills.map((s: string) => (
-                    <span class="text-xs px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/25">{s}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {entry.data.features?.length && (
-              <div>
-                <div class="text-[10px] font-black tracking-widest uppercase text-indigo-400 mb-2">사용 기능</div>
-                <div class="flex flex-wrap gap-2">
-                  {entry.data.features.map((f: string) => (
-                    <span class="text-xs px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/25">{f}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        <h1 class="detail-title">{d.title ?? entry.id}</h1>
+        {d.description && <p class="detail-desc">{d.description}</p>}
+        {d.maker && <p class="detail-maker">by {d.maker}</p>}
       </div>
 
-      <!-- 임베드 or 외부 링크 -->
-      {isEmbed && entry.data.link ? (
-        <div class="w-full aspect-video border border-white/10 rounded-2xl overflow-hidden bg-black mb-8">
-          <iframe
-            src={entry.data.link}
-            title={entry.data.title ?? entry.id}
-            class="w-full h-full"
-            allowfullscreen
-          ></iframe>
+      <!-- 사용 도구 -->
+      {(d.agents?.length || d.skills?.length || d.features?.length) && (
+        <div class="tool-section">
+          {d.agents?.length && (
+            <div class="tool-group">
+              <div class="tool-label agent-label">🤖 AI 에이전트</div>
+              <div class="badge-row">
+                {d.agents.map((a: string) => <span class="badge agent">{a}</span>)}
+              </div>
+            </div>
+          )}
+          {d.skills?.length && (
+            <div class="tool-group">
+              <div class="tool-label skill-label">⚡ Skills</div>
+              <div class="badge-row">
+                {d.skills.map((s: string) => <span class="badge skill">{s}</span>)}
+              </div>
+            </div>
+          )}
+          {d.features?.length && (
+            <div class="tool-group">
+              <div class="tool-label feature-label">🔧 기술 스택</div>
+              <div class="badge-row">
+                {d.features.map((f: string) => <span class="badge feature">{f}</span>)}
+              </div>
+            </div>
+          )}
         </div>
-      ) : entry.data.link ? (
-        <div class="mb-8">
-          <a href={entry.data.link} target="_blank" rel="noopener"
-             class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-colors">
-            ↗ 결과물 열기
-          </a>
-        </div>
-      ) : null}
+      )}
 
-      <!-- 본문 설명 -->
+      <!-- 기술설계서 -->
+      {hasSpec && (
+        <div class="spec-section">
+          <div class="spec-header">
+            <span class="spec-icon">📋</span>
+            <span>기술설계서</span>
+            <span class="spec-sub">— 이대로 따라하면 됩니다</span>
+          </div>
+
+          {d.spec_summary && (
+            <div class="spec-block summary-block">
+              <div class="spec-block-label">📌 한 줄 요약</div>
+              <p class="spec-summary-text">{d.spec_summary}</p>
+            </div>
+          )}
+
+          {d.spec_stack?.length && (
+            <div class="spec-block">
+              <div class="spec-block-label">🧱 스택 & 환경</div>
+              <ul class="spec-list">
+                {d.spec_stack.map((s: string) => <li>{s}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {d.spec_how?.length && (
+            <div class="spec-block">
+              <div class="spec-block-label">🤖 Claude 활용법</div>
+              <ul class="spec-list">
+                {d.spec_how.map((h: string) => <li>{h}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {d.spec_steps?.length && (
+            <div class="spec-block">
+              <div class="spec-block-label">🔁 재현 순서</div>
+              <ol class="spec-list spec-ordered">
+                {d.spec_steps.map((s: string) => <li>{s}</li>)}
+              </ol>
+            </div>
+          )}
+
+          {d.spec_notes?.length && (
+            <div class="spec-block">
+              <div class="spec-block-label">⚠️ 주의점 & 배운 것</div>
+              <ul class="spec-list">
+                {d.spec_notes.map((n: string) => <li>{n}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      <!-- 본문 마크다운 -->
       {entry.body && entry.body.trim() && (
-        <div class="pt-8 border-t border-white/10">
+        <div class="body-section">
           <article class="wiki-prose">
             <Content />
           </article>
         </div>
       )}
 
-      <!-- 뒤로 -->
-      <div class="mt-12 pt-8 border-t border-white/10">
-        <a href="/gallery" class="text-sm text-white/40 hover:text-white transition-colors">
-          ← 갤러리 목록으로
-        </a>
-      </div>
-
     </div>
-  </section>
+  </div>
+
+  <!-- 뒤로 -->
+  <div style="margin-top:32px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.06);">
+    <a href="/gallery" style="font-size:12px; color:rgba(255,255,255,0.3); text-decoration:none;">← 갤러리 목록으로</a>
+  </div>
+
 </Layout>
 
 <style>
-  .wiki-prose {
-    color: rgba(255,255,255,0.75);
-    line-height: 1.8;
-    font-size: 15px;
+  .gallery-detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    align-items: start;
   }
-  .wiki-prose :global(h2) {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: #fff;
-    margin: 2rem 0 0.75rem;
+  @media (max-width: 900px) {
+    .gallery-detail { grid-template-columns: 1fr; }
   }
-  .wiki-prose :global(p) { margin-bottom: 1rem; }
-  .wiki-prose :global(ul) { padding-left: 1.5rem; margin-bottom: 1rem; }
-  .wiki-prose :global(li) { margin-bottom: 0.3rem; }
+
+  /* 미리보기 */
+  .preview-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/10;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #111;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .preview-wrap iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 200%; height: 200%;
+    transform: scale(0.5);
+    transform-origin: top left;
+    border: none;
+    pointer-events: none;
+  }
+  .preview-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 50%, rgba(13,13,15,0.7));
+  }
+  .preview-empty {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #1e1b4b, #0d0d0f);
+    font-size: 48px; font-weight: 900;
+    color: rgba(255,255,255,0.08);
+  }
+
+  .open-btn {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 10px;
+    padding: 7px 16px;
+    border-radius: 8px;
+    background: rgba(99,102,241,0.15);
+    border: 1px solid rgba(99,102,241,0.3);
+    color: #818cf8;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .open-btn:hover { background: rgba(99,102,241,0.25); }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .tag {
+    font-size: 10px; padding: 3px 8px; border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.4);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* 우측 */
+  .detail-header { margin-bottom: 20px; }
+  .type-badge {
+    font-size: 9px; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 2px 8px; border-radius: 4px;
+    background: rgba(129,140,248,0.12); color: #818cf8;
+    border: 1px solid rgba(129,140,248,0.25);
+  }
+  .detail-title { font-size: 22px; font-weight: 900; color: #fff; margin: 0 0 6px; line-height: 1.3; }
+  .detail-desc { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6; margin: 0; }
+  .detail-maker { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 6px; }
+
+  /* 사용 도구 */
+  .tool-section {
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 16px; border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.07);
+    margin-bottom: 20px;
+  }
+  .tool-group { display: flex; flex-direction: column; gap: 6px; }
+  .tool-label { font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+  .agent-label { color: #34d399; }
+  .skill-label  { color: #fbbf24; }
+  .feature-label{ color: #a5b4fc; }
+  .badge-row { display: flex; flex-wrap: wrap; gap: 5px; }
+  .badge {
+    font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 5px; border: 1px solid;
+  }
+  .badge.agent   { background: rgba(16,185,129,0.1); color: #34d399; border-color: rgba(16,185,129,0.25); }
+  .badge.skill   { background: rgba(245,158,11,0.1); color: #fbbf24; border-color: rgba(245,158,11,0.25); }
+  .badge.feature { background: rgba(99,102,241,0.1); color: #a5b4fc; border-color: rgba(99,102,241,0.25); }
+
+  /* 기술설계서 */
+  .spec-section {
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .spec-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px;
+    background: rgba(99,102,241,0.08);
+    border-bottom: 1px solid rgba(99,102,241,0.15);
+    font-size: 13px; font-weight: 800; color: #a5b4fc;
+  }
+  .spec-icon { font-size: 15px; }
+  .spec-sub { font-size: 11px; font-weight: 400; color: rgba(255,255,255,0.3); }
+
+  .spec-block {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .spec-block:last-child { border-bottom: none; }
+  .spec-block-label {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
+    text-transform: uppercase; color: rgba(255,255,255,0.35);
+    margin-bottom: 8px;
+  }
+  .summary-block { background: rgba(99,102,241,0.05); }
+  .spec-summary-text {
+    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85);
+    line-height: 1.6; margin: 0;
+  }
+  .spec-list {
+    margin: 0; padding-left: 18px;
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .spec-list li { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.55; }
+  .spec-ordered { list-style-type: decimal; }
+  .spec-ordered li { color: rgba(255,255,255,0.7); }
+
+  /* 본문 */
+  .body-section {
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .wiki-prose { color: rgba(255,255,255,0.7); line-height: 1.8; font-size: 14px; }
+  .wiki-prose :global(h2) { font-size: 1rem; font-weight: 800; color: #fff; margin: 1.5rem 0 0.5rem; }
+  .wiki-prose :global(p) { margin-bottom: 0.8rem; }
+  .wiki-prose :global(ul) { padding-left: 1.5rem; margin-bottom: 0.8rem; }
+  .wiki-prose :global(li) { margin-bottom: 0.25rem; }
   .wiki-prose :global(a) { color: #818cf8; }
   .wiki-prose :global(strong) { color: #fff; font-weight: 700; }
+  .wiki-prose :global(code) {
+    font-size: 12px; padding: 2px 6px; border-radius: 4px;
+    background: rgba(255,255,255,0.08); color: #a5b4fc;
+  }
 </style>

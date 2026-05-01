@@ -22,9 +22,16 @@ const gallery = defineCollection({
     created: z.coerce.string().optional(),
     description: z.string().optional(),
     type: z.enum(['vanilla', 'external', 'ppt']).optional().default('vanilla'),
+    // 기술 스택
     agents: z.array(z.string()).optional(),
     skills: z.array(z.string()).optional(),
     features: z.array(z.string()).optional(),
+    // 기술설계서
+    spec_summary: z.string().optional(),
+    spec_stack: z.array(z.string()).optional(),
+    spec_how: z.array(z.string()).optional(),
+    spec_steps: z.array(z.string()).optional(),
+    spec_notes: z.array(z.string()).optional(),
   }),
 });
 
