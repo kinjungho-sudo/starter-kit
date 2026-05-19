@@ -101,4 +101,17 @@ const gallery = defineCollection({
   }),
 });
 
-export const collections = { missions, insights, quotes, videos, analysis, members, gallery };
+const wiki = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/wiki' }),
+  schema: z.object({
+    title: z.string().optional(),
+    category: z.string().optional(),
+    tags: z.array(z.string()).optional().default([]),
+    source: z.string().optional(),
+    created: z.coerce.string().optional(),
+    expires: z.coerce.string().optional(),
+    type: z.string().optional(),
+  }),
+});
+
+export const collections = { missions, insights, quotes, videos, analysis, members, gallery, wiki };

@@ -1,0 +1,144 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+let all: any[] = [];
+try { all = await getCollection('wiki'); } catch { all = []; }
+
+const EMOJI: Record<string, string> = {
+  'AI에이전트': '🤖',
+  '창업': '🚀',
+  '독서노트': '📚',
+  '자동화': '⚙️',
+  '개발': '💻',
+  '콘텐츠': '✍️',
+  '유튜브': '🎬',
+  '나': '🪞',
+  '성공': '🏆',
+  '리서치': '🔍',
+  '글쓰기': '📝',
+  '기타': '📄',
+};
+
+const normalized = all.map((s: any) => ({
+  ...s,
+  data: { ...s.data, category: s.data.category ?? '기타' }
+}));
+
+const categories = ['전체', ...([...new Set(normalized.map((s: any) => s.data.category))].sort())];
+const total = normalized.length;
+---
+
+<Layout title="Wiki">
+
+  <div slot="sidebar">
+    <p class="sb-label">카테고리</p>
+    {categories.map((cat) => (
+      <button class="sb-item" data-cat={cat}
+        style="background:none; border:none; width:100%; text-align:left; cursor:pointer;">
+        {EMOJI[cat] ?? ''} {cat}
+        <span class="count">
+          {cat === '전체' ? total : normalized.filter((s: any) => s.data.category === cat).length}
+        </span>
+      </button>
+    ))}
+  </div>
+
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+    <div>
+      <h1 class="page-title" id="page-heading">Wiki</h1>
+      <p class="page-meta" id="page-count">{total}건</p>
+    </div>
+    <div style="position:relative;">
+      <input id="search-input" type="text" placeholder="제목 검색..."
+        style="height:28px; padding:0 10px 0 28px; background:var(--surface); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:12px; width:180px; outline:none;"
+        onfocus="this.style.borderColor='var(--accent)'"
+        onblur="this.style.borderColor='var(--border)'" />
+      <span style="position:absolute; left:8px; top:50%; transform:translateY(-50%); color:var(--muted2); font-size:12px; pointer-events:none;">⌕</span>
+    </div>
+  </div>
+
+  <div id="wiki-container">
+    {categories.filter(c => c !== '전체').map((cat) => {
+      const items = normalized.filter((s: any) => s.data.category === cat);
+      if (items.length === 0) return null;
+      return (
+        <div class="cat-section" data-section={cat}>
+          <p class="section-label" style="margin-bottom:6px;">
+            {EMOJI[cat] ?? ''} {cat}
+            <span style="font-weight:400; opacity:0.5;">({items.length})</span>
+          </p>
+          <div style="display:flex; flex-direction:column; gap:1px; margin-bottom:20px;">
+            {items.map((s: any) => (
+              <a href={`/wiki/${encodeURIComponent(s.id)}`}
+                 class="row wiki-row"
+                 data-slug={s.id}
+                 data-title={(s.data.title ?? s.id).toLowerCase()}
+                 data-cat={s.data.category}>
+                <span class="badge badge-indigo" style="flex-shrink:0;">{s.data.category}</span>
+                <span style="font-size:12px; color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                  {s.data.title ?? s.id}
+                </span>
+                {s.data.created && (
+                  <span style="font-size:10px; color:var(--muted2); flex-shrink:0;">
+                    {String(s.data.created).slice(0, 10)}
+                  </span>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+      );
+    })}
+  </div>
+
+  <div id="empty-state" style="display:none; padding:64px 0; text-align:center; color:var(--muted2); font-size:13px;">
+    검색 결과가 없습니다.
+  </div>
+
+</Layout>
+
+<script>
+  const catButtons  = document.querySelectorAll<HTMLButtonElement>('[data-cat]');
+  const sections    = document.querySelectorAll<HTMLElement>('.cat-section');
+  const searchInput = document.getElementById('search-input') as HTMLInputElement;
+  const heading     = document.getElementById('page-heading')!;
+  const countEl    = document.getElementById('page-count')!;
+  const emptyState  = document.getElementById('empty-state')!;
+
+  let activeCat   = '전체';
+  let searchQuery = '';
+
+  function render() {
+    let visible = 0;
+    sections.forEach(sec => {
+      const inCat = activeCat === '전체' || sec.dataset.section === activeCat;
+      const label = sec.querySelector<HTMLElement>('.section-label');
+      if (label) label.style.display = activeCat === '전체' ? '' : 'none';
+
+      const rows = sec.querySelectorAll<HTMLElement>('.wiki-row');
+      let secVis = 0;
+      rows.forEach(row => {
+        const match = !searchQuery || (row.dataset.title ?? '').includes(searchQuery);
+        row.style.display = (inCat && match) ? '' : 'none';
+        if (inCat && match) secVis++;
+      });
+      sec.style.display = secVis > 0 ? '' : 'none';
+      visible += secVis;
+    });
+
+    heading.textContent = activeCat === '전체' ? 'Wiki' : activeCat;
+    countEl.textContent = `${visible}건`;
+    emptyState.style.display = visible === 0 ? '' : 'none';
+    catButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.cat === activeCat));
+  }
+
+  catButtons.forEach(btn => btn.addEventListener('click', () => {
+    activeCat = btn.dataset.cat ?? '전체';
+    render();
+  }));
+  searchInput.addEventListener('input', () => {
+    searchQuery = searchInput.value.toLowerCase().trim();
+    render();
+  });
+</script>
